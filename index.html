@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="P人自有妙計">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link class="apple-touch-icon" href="icon-192.png">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -171,17 +171,28 @@
   .accounting-badge { background: #ECEAE6; color: var(--ink); padding: 1px 4px; border-radius: 4px; font-size: 10px; }
   .accounting-total-label { color: var(--accent); font-weight: 700; text-align: right; }
 
-  /* ---------- 月檢視 ---------- */
-  .month-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:6px;}
-  .month-dow{text-align:center; font-size:11px; color:var(--muted); padding-bottom:6px;}
-  .month-cell{ aspect-ratio:1/1; border-radius:10px; border:1px solid var(--line); background:var(--card); padding:6px 5px; cursor:pointer; display:flex; flex-direction:column; gap:3px; position:relative; overflow:hidden; }
-  .month-cell.outside{opacity:0.32;}
-  .month-cell .cell-num{font-size:12.5px; font-weight:500; font-family:'Noto Serif TC',serif;}
-  .month-cell.is-today{border-color:var(--accent); background:var(--accent-soft);}
-  .month-cell .cell-dots{display:flex; gap:2px; flex-wrap:wrap; margin-top:auto;}
-  .month-cell .dot{width:4px; height:4px; border-radius:50%; background:var(--accent);}
-  .month-cell .dot.done{background:var(--done);}
-  .month-cell .expense-tag { position: absolute; top: 4px; right: 4px; font-size: 10px; color: var(--accent); font-weight: bold; }
+  /* ---------- 月檢視樣式優化 ---------- */
+  .month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+  .month-dow { text-align: center; font-size: 13px; font-weight: 700; color: var(--muted); padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+  .month-day { 
+    aspect-ratio: 1 / 1; 
+    border-radius: var(--radius); 
+    border: 1px solid var(--line); 
+    background: var(--card); 
+    padding: 8px; 
+    cursor: pointer; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: flex-start; 
+    position: relative; 
+    overflow: hidden; 
+    box-shadow: var(--shadow);
+    min-height: 90px;
+  }
+  .month-day.empty { background: transparent; border: none; box-shadow: none; cursor: default; }
+  .month-day .day-num { font-size: 14px; font-weight: 700; font-family: 'Noto Serif TC', serif; color: var(--ink); }
+  .month-day.today-active { border: 2px solid var(--accent); background: #FAF9F6; }
+  .month-day.today-active .day-num { color: var(--bg); background: var(--accent); border-radius: 50%; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; }
 
   /* ---------- 日期詳情彈出卡 ---------- */
   #day-detail{display:none; margin-top:24px;}
@@ -382,7 +393,6 @@
 /* ============================================================
    Firebase 配置區
    ============================================================ */
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyBXy28clA40B41r_iyEXzWtkH21k1MPnG0",
   authDomain: "daily-schedule-hahaha.firebaseapp.com",
@@ -404,7 +414,7 @@ let currentUser = null;
 let currentView = 'week';        
 let anchorDate = new Date();      
 let selectedDateStr = null;       
-let daysData = {};                // 儲存每日任務與日記、記帳
+let daysData = {};                
 let weeksMeta = {};               
 let monthsMeta = {};              
 let globalPool = [];              
@@ -478,10 +488,8 @@ function updateGlobalStatsUI() {
     .reduce((sum, log) => sum + log.points, 0);
 
   const scoreDisplay = document.getElementById('total-score-display');
-  if (scoreDisplay) {
-    scoreDisplay.textContent = monthlyPoints >= 0 ? `+${monthlyPoints}` : monthlyPoints;
-    scoreDisplay.className = 'num ' + (monthlyPoints >= 0 ? 'positive' : 'negative');
-  }
+  scoreDisplay.textContent = monthlyPoints >= 0 ? `+${monthlyPoints}` : monthlyPoints;
+  scoreDisplay.className = 'num ' + (monthlyPoints >= 0 ? 'positive' : 'negative');
 
   const mon = getMondayOfWeek(anchorDate);
   const weekDates = [];
@@ -498,10 +506,7 @@ function updateGlobalStatsUI() {
     if (dStr.startsWith(currentMonthStr)) monthlyExpenseSum += dayTotal;
   });
 
-  const expenseDisplay = document.getElementById('expense-summary-display');
-  if (expenseDisplay) {
-    expenseDisplay.textContent = `$${weeklyExpenseSum} / $${monthlyExpenseSum}`;
-  }
+  document.getElementById('expense-summary-display').textContent = `$${weeklyExpenseSum} / $${monthlyExpenseSum}`;
 }
 
 /* ============================================================
@@ -545,13 +550,14 @@ function attachFirestoreListeners() {
       if (change.type === 'removed') delete daysData[dateStr];
       else daysData[dateStr] = change.doc.data();
     });
+    checkAndSyncWeekPlans();
     renderCurrentView();
     if (selectedDateStr) renderDayDetail(selectedDateStr);
   });
 
   unsubscribeWeeks = userDocRef.collection('weeks').onSnapshot(snapshot => {
     snapshot.docChanges().forEach(change => { if (change.type !== 'removed') weeksMeta[change.doc.id] = change.doc.data(); });
-    // 如果你有實作 updateWeekTitleUI 可以在這裡呼叫
+    updateWeekTitleUI();
   });
 
   unsubscribeMonths = userDocRef.collection('months').onSnapshot(snapshot => {
@@ -580,7 +586,7 @@ function detachListeners() {
 function getDayData(dateStr) { return daysData[dateStr] || { tasks: [], diary: '', ledger: [] }; }
 
 /* ============================================================
-   任務流轉分配與「明天再做」邏輯
+   任務管理邏輯
    ============================================================ */
 async function addDistributedTask(dateStr, text, color, note, parentId) {
   const current = getDayData(dateStr);
@@ -600,15 +606,16 @@ async function toggleTask(dateStr, taskId) {
   });
   await db.collection('users').doc(currentUser.uid).collection('days').doc(dateStr).set({ tasks }, { merge: true });
   if (pointsToAward !== 0) await logScoreChange(pointsToAward, pointsToAward > 0 ? "完成分配任務" : "取消任務完成", dateStr);
+  setTimeout(() => { checkAndSyncWeekPlans(); }, 300);
 }
 
 async function deleteTask(dateStr, taskId) {
   const current = getDayData(dateStr);
   const tasks = (current.tasks || []).filter(t => t.id !== taskId);
   await db.collection('users').doc(currentUser.uid).collection('days').doc(dateStr).set({ tasks }, { merge: true });
+  setTimeout(() => { checkAndSyncWeekPlans(); }, 300);
 }
 
-/* 明天再做順延按鈕 */
 async function postponeTaskToTomorrow(dateStr, taskId) {
   const current = getDayData(dateStr); let taskToMove = null;
   const tasks = (current.tasks || []).map(t => {
@@ -625,8 +632,24 @@ async function postponeTaskToTomorrow(dateStr, taskId) {
   alert('已流向明天！分數 －３ 🩸');
 }
 
+function checkAndSyncWeekPlans() {
+  if (!currentUser) return;
+  globalPool.forEach(async (plan) => {
+    if (!plan.assignedDates || plan.assignedDates.length === 0) return;
+    let allDone = true;
+    for (const dStr of plan.assignedDates) {
+      const matchTask = (getDayData(dStr).tasks || []).find(t => t.parentId === plan.id);
+      if (!matchTask || !matchTask.done) { allDone = false; break; }
+    }
+    const nextStatus = allDone ? 'completed' : 'pending';
+    if (plan.status !== nextStatus) {
+      await db.collection('users').doc(currentUser.uid).collection('pool').doc(plan.id).update({ status: nextStatus });
+    }
+  });
+}
+
 /* ============================================================
-   ✐ 備註動態雙擊/點擊即時編輯
+   ✐ 備註編輯
    ============================================================ */
 function enableInlineNoteEdit(element, id, collectionType, dateStr = null, taskId = null) {
   element.addEventListener('click', (e) => {
@@ -650,6 +673,42 @@ function enableInlineNoteEdit(element, id, collectionType, dateStr = null, taskI
     input.addEventListener('blur', saveNoteUpdate);
     element.replaceWith(input); input.focus();
   });
+}
+
+async function checkAndCarryOverBubbles() {
+  if (!currentUser) return;
+  const now = new Date();
+  const currentMon = getMondayOfWeek(anchorDate);
+  const currentSun = addDays(currentMon, 6);
+  currentSun.setHours(23, 59, 59, 999);
+
+  if (now.getTime() < currentSun.getTime()) {
+    document.getElementById('bubble-banner').style.display = 'none';
+    return;
+  }
+
+  const currentWeekId = getWeekIdentifier(anchorDate);
+  const overdueTasks = globalPool.filter(item => item.status === 'pending' && item.weekId && item.weekId < currentWeekId);
+  
+  if (overdueTasks.length === 0) { 
+    document.getElementById('bubble-banner').style.display = 'none'; 
+    return; 
+  }
+
+  const batch = db.batch();
+  const lastSundayStr = toDateStr(currentSun);
+
+  for (const item of overdueTasks) {
+    batch.update(db.collection('users').doc(currentUser.uid).collection('pool').doc(item.id), { 
+      weekId: currentWeekId, 
+      isBubble: true 
+    });
+    await logScoreChange(-5, `週計畫「${item.text}」未落實，結算觸發漂流`, lastSundayStr);
+  }
+  
+  await batch.commit();
+  document.getElementById('bubble-banner').style.display = 'block';
+  setTimeout(() => { document.getElementById('bubble-banner').style.display = 'none'; }, 5000);
 }
 
 /* ============================================================
@@ -730,9 +789,7 @@ function renderPoolUI() {
     `;
 
     const noteSpanEl = div.querySelector(`#note-pool-${item.id}`);
-    if (noteSpanEl) {
-      noteSpanEl.dataset.rawNote = item.note || ''; enableInlineNoteEdit(noteSpanEl, item.id, 'pool');
-    }
+    noteSpanEl.dataset.rawNote = item.note || ''; enableInlineNoteEdit(noteSpanEl, item.id, 'pool');
 
     div.querySelector('.confirm-assign-btn').addEventListener('click', async () => {
       const checkedBoxes = div.querySelectorAll('.assign-check:checked');
@@ -777,10 +834,8 @@ function renderWeekKanbanView() {
     const data = getDayData(dateStr); const tasks = data.tasks || []; const ledger = data.ledger || [];
 
     const col = document.createElement('div'); col.className = 'kanban-col' + (isSameDay(d, today) ? ' is-today' : '');
-    
     const header = document.createElement('div'); header.className = 'kanban-header';
 
-    // 💡 檢查特殊日子標籤
     let specialDayBadgeHtml = '';
     if (data.specialDay) {
       specialDayBadgeHtml = `<div style="font-size:11px; background:#EADDD6; color:#C75D3D; padding:2px 6px; border-radius:4px; margin-top:4px; font-weight:bold; display:inline-block;">✨ ${escapeHtml(data.specialDay)}</div>`;
@@ -803,7 +858,6 @@ function renderWeekKanbanView() {
       });
     }
 
-    // 💸 底部記帳小卡摘要
     const accountingSummaryDiv = document.createElement('div');
     accountingSummaryDiv.className = 'kanban-accounting-summary';
     accountingSummaryDiv.addEventListener('click', () => openDayDetail(dateStr));
@@ -825,37 +879,42 @@ function renderWeekKanbanView() {
 }
 
 /* ============================================================
-   月網格檢視 (💡 已修正變數名稱錯誤，讓月計畫正常載入)
+   修正後的月檢視渲染函數
    ============================================================ */
 function renderMonthView() {
+  const dowRow = document.getElementById('month-dow-row');
   const grid = document.getElementById('month-grid');
-  if (!grid) return;
+  
+  if (!dowRow || !grid) return;
+  
+  // 1. 渲染頂部星期標頭 (週一至週日)
+  dowRow.innerHTML = WEEKDAY_LABELS_SHORT.map(label => `<div class="month-dow">${label}</div>`).join('');
   grid.innerHTML = '';
 
-  // 💡 關鍵修復：這裡全部換回 anchorDate，月計畫就不會再卡死了！
+  // 2. 使用全域的 anchorDate 當作當月基準
   const year = anchorDate.getFullYear();
   const month = anchorDate.getMonth();
   
-  // 更新上方的時間區段標示
-  const periodLabel = document.getElementById('period-label');
-  if (periodLabel) periodLabel.textContent = `${year} 年 ${month + 1} 月`;
+  // 設定導覽列標籤顯示年份與月份
+  document.getElementById('period-label').textContent = `${year}年 ${pad2(month + 1)}月`;
 
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
 
+  // 計算週一到週日的對齊偏移
   let startOffset = firstDay.getDay() - 1;
   if (startOffset < 0) startOffset = 6; 
 
   const totalDays = lastDay.getDate();
 
-  // 1. 填補當月第一天前的前期空白
+  // 3. 填補前面的空白格子
   for (let i = 0; i < startOffset; i++) {
     const empty = document.createElement('div');
     empty.className = 'month-day empty';
     grid.appendChild(empty);
   }
 
-  // 2. 開始渲染每一天
+  // 4. 渲染當月的每一天
   for (let day = 1; day <= totalDays; day++) {
     const d = new Date(year, month, day);
     const dateStr = toDateStr(d);
@@ -868,7 +927,6 @@ function renderMonthView() {
       dayDiv.classList.add('today-active');
     }
 
-    // 🍊 暖橘色特殊日子標籤
     let specialDayHtml = '';
     if (data && data.specialDay) {
       specialDayHtml = `
@@ -876,15 +934,15 @@ function renderMonthView() {
           font-size: 10px; 
           background: #FFF9F5; 
           color: #C75D3D; 
-          padding: 1px 4px; 
-          border-radius: 3px; 
+          padding: 2px 4px; 
+          border-radius: 4px; 
           margin-top: 4px; 
           font-weight: bold; 
           text-overflow: ellipsis; 
           overflow: hidden; 
           white-space: nowrap;
           border: 1px solid #F5E6DA;
-          max-width: 100%;
+          width: 100%;
           box-sizing: border-box;
         " title="${escapeHtml(data.specialDay)}">
           ✨ ${escapeHtml(data.specialDay)}
@@ -892,9 +950,15 @@ function renderMonthView() {
       `;
     }
 
+    // 計算今日花費摘要
+    const ledger = data.ledger || [];
+    let dayTotalSpend = ledger.reduce((sum, item) => sum + (item.amount || 0), 0);
+    let spendHtml = dayTotalSpend > 0 ? `<div style="font-size:10px; color:var(--accent); font-weight:700; margin-top:auto; align-self:flex-end;">-$${dayTotalSpend}</div>` : '';
+
     dayDiv.innerHTML = `
       <span class="day-num">${day}</span>
       ${specialDayHtml}
+      ${spendHtml}
     `;
 
     dayDiv.addEventListener('click', () => {
@@ -906,12 +970,11 @@ function renderMonthView() {
 }
 
 /* ============================================================
-   日詳情內嵌渲染 (任務勾選、記帳清單控制)
+   日詳情內嵌渲染
    ============================================================ */
 function openDayDetail(dateStr) { selectedDateStr = dateStr; renderDayDetail(dateStr); document.getElementById('day-detail').style.display = 'block'; document.getElementById('day-detail').scrollIntoView({ behavior:'smooth', block:'nearest' }); }
 document.getElementById('close-detail-btn').addEventListener('click', () => { document.getElementById('day-detail').style.display = 'none'; selectedDateStr = null; });
 
-// 宣告特殊日子的計時器變數
 let specialDayTimer = null;
 
 function renderDayDetail(dateStr) {
@@ -922,20 +985,18 @@ function renderDayDetail(dateStr) {
   const data = getDayData(dateStr);
   
   const specialInput = document.getElementById('special-day-input');
-  if (specialInput && document.activeElement !== specialInput) {
+  if (document.activeElement !== specialInput) {
     specialInput.value = data.specialDay || '';
   }
-  const specialIndicator = document.getElementById('special-day-indicator');
-  if (specialIndicator) specialIndicator.textContent = '';
+  document.getElementById('special-day-indicator').textContent = '';
   
-  // 1. 渲染分配進來的任務 
   const tasks = data.tasks || []; const list = document.getElementById('task-list'); list.innerHTML = '';
   if (tasks.length === 0) {
     list.innerHTML = `<div style="font-size:12px; color:var(--muted); font-style:italic; padding:6px 0;">今天沒事做！</div>`;
   } else {
     tasks.forEach(t => {
       const item = document.createElement('div'); item.className = 'task-item';
-      item.style.borderLeft = `3px solid ${MORANDI_COLORS[t.color || 'none']}`;
+      item.style.borderLeft = `3px solid ${MORANDI_COLORS[t.color || 'none']}`; 
       
       const displayNote = t.note ? `✐ ${t.note} (點擊編輯)` : `✐`;
       const noteSpanHtml = `<span class="editable-note-span" id="note-day-${t.id}">${escapeHtml(displayNote)}</span>`;
@@ -957,14 +1018,11 @@ function renderDayDetail(dateStr) {
       }
 
       const noteSpanEl = item.querySelector(`#note-day-${t.id}`);
-      if (noteSpanEl) {
-        noteSpanEl.dataset.rawNote = t.note || ''; enableInlineNoteEdit(noteSpanEl, t.id, 'days', dateStr, t.id);
-      }
+      noteSpanEl.dataset.rawNote = t.note || ''; enableInlineNoteEdit(noteSpanEl, t.id, 'days', dateStr, t.id);
       list.appendChild(item);
     });
   }
 
-  // 2. 💸 渲染今日記帳列表 
   const ledger = data.ledger || []; const ledgerListEl = document.getElementById('ledger-list'); ledgerListEl.innerHTML = '';
   let totalSpend = ledger.reduce((sum, item) => sum + (item.amount || 0), 0);
   document.getElementById('detail-day-spend-total').textContent = `共 $${totalSpend}`;
@@ -980,61 +1038,46 @@ function renderDayDetail(dateStr) {
     });
   }
 
-  // 3. 備份日記
   const textarea = document.getElementById('diary-textarea');
-  if (textarea && document.activeElement !== textarea) textarea.value = data.diary || '';
-  const saveIndicator = document.getElementById('save-indicator');
-  if (saveIndicator) saveIndicator.textContent = '';
+  if (document.activeElement !== textarea) textarea.value = data.diary || '';
+  document.getElementById('save-indicator').textContent = '';
 }
 
-/* 點擊記帳事件觸發 */
 document.getElementById('add-ledger-btn').addEventListener('click', addLedgerItem);
 document.getElementById('ledger-amount').addEventListener('keydown', (e) => { if (e.key === 'Enter') addLedgerItem(); });
 
-/* 自動儲存小日記 */
 document.getElementById('diary-textarea').addEventListener('input', e => { if (!selectedDateStr) return; scheduleDiarySave(selectedDateStr, e.target.value); });
 function scheduleDiarySave(dateStr, text) {
-  clearTimeout(diarySaveTimer); const indicator = document.getElementById('save-indicator'); if (indicator) indicator.textContent = '自動儲存中···';
+  clearTimeout(diarySaveTimer); const indicator = document.getElementById('save-indicator'); indicator.textContent = '自動儲存中···';
   diarySaveTimer = setTimeout(async () => {
     await db.collection('users').doc(currentUser.uid).collection('days').doc(dateStr).set({ diary: text }, { merge: true });
-    if (indicator) indicator.textContent = '已儲存 ✓';
+    indicator.textContent = '已儲存 ✓';
   }, 800);
 }
 
-/* 💡 自動儲存特殊日子的監聽事件 */
-const specialDayInputEl = document.getElementById('special-day-input');
-if (specialDayInputEl) {
-  specialDayInputEl.addEventListener('input', e => {
-    if (!selectedDateStr) return;
-    clearTimeout(specialDayTimer);
-    const indicator = document.getElementById('special-day-indicator');
-    if (indicator) indicator.textContent = '自動同步中···';
-    specialDayTimer = setTimeout(async () => {
-      await db.collection('users').doc(currentUser.uid).collection('days').doc(selectedDateStr).set({ specialDay: e.target.value.trim() }, { merge: true });
-      if (indicator) indicator.textContent = '已記錄 ✓';
-    }, 800);
-  });
-}
+document.getElementById('special-day-input').addEventListener('input', e => {
+  if (!selectedDateStr) return;
+  clearTimeout(specialDayTimer);
+  const indicator = document.getElementById('special-day-indicator');
+  indicator.textContent = '自動同步中···';
+  specialDayTimer = setTimeout(async () => {
+    await db.collection('users').doc(currentUser.uid).collection('days').doc(selectedDateStr).set({ specialDay: e.target.value.trim() }, { merge: true });
+    indicator.textContent = '已記錄 ✓';
+  }, 800);
+});
 
-/* 自動儲存月目標 */
-const monthGoalInputEl = document.getElementById('month-goal-input');
-if (monthGoalInputEl) {
-  monthGoalInputEl.addEventListener('input', (e) => {
-    clearTimeout(monthGoalTimer); const mStr = toMonthStr(anchorDate); const indicator = document.getElementById('month-goal-indicator'); if (indicator) indicator.textContent = '同步中 ···';
-    monthGoalTimer = setTimeout(async () => {
-      await db.collection('users').doc(currentUser.uid).collection('months').doc(mStr).set({ goal: e.target.value }, { merge: true });
-      if (indicator) {
-        indicator.textContent = '儲存成功'; setTimeout(() => { indicator.textContent = ''; }, 1500);
-      }
-    }, 800);
-  });
-}
+document.getElementById('month-goal-input').addEventListener('input', (e) => {
+  clearTimeout(monthGoalTimer); const mStr = toMonthStr(anchorDate); const indicator = document.getElementById('month-goal-indicator'); indicator.textContent = '同步中 ···';
+  monthGoalTimer = setTimeout(async () => {
+    await db.collection('users').doc(currentUser.uid).collection('months').doc(mStr).set({ goal: e.target.value }, { merge: true });
+    indicator.textContent = '儲存成功'; setTimeout(() => { indicator.textContent = ''; }, 1500);
+  }, 800);
+});
 function updateMonthGoalUI() {
   const mStr = toMonthStr(anchorDate); const tx = document.getElementById('month-goal-input');
-  if (tx && document.activeElement !== tx) { tx.value = (monthsMeta[mStr] && monthsMeta[mStr].goal) ? monthsMeta[mStr].goal : ''; }
+  if (document.activeElement !== tx) { tx.value = (monthsMeta[mStr] && monthsMeta[mStr].goal) ? monthsMeta[mStr].goal : ''; }
 }
 
-/* 視圖切換切換與點擊 */
 document.getElementById('btn-week-view').addEventListener('click', () => switchView('week'));
 document.getElementById('btn-month-view').addEventListener('click', () => switchView('month'));
 function switchView(view) {
@@ -1051,9 +1094,48 @@ document.getElementById('nav-today').addEventListener('click', () => { anchorDat
 
 function renderCurrentView() {
   if (!currentUser) return;
-  updateMonthGoalUI();
+  updateMonthGoalUI(); updateWeekTitleUI();
+  checkAndCarryOverBubbles();
+  renderPoolUI(); 
   updateGlobalStatsUI();
-  renderPoolUI();
-  if (currentView === 'week') renderWeekKanbanView();
-  else renderMonthView();
+  if (currentView === 'week') renderWeekKanbanView(); else renderMonthView();
 }
+
+const editWeekBtn = document.getElementById('week-title-edit-btn');
+const weekTitleText = document.getElementById('week-title-text');
+const weekTitleInput = document.getElementById('week-title-input');
+editWeekBtn.addEventListener('click', () => {
+  if (weekTitleInput.style.display === 'none' || weekTitleInput.style.display === '') {
+    weekTitleInput.style.display = 'inline-block'; weekTitleText.style.display = 'none';
+    weekTitleInput.value = weekTitleText.textContent === '命名' ? '' : weekTitleText.textContent;
+    weekTitleInput.focus(); editWeekBtn.textContent = '💾';
+  } else { saveWeekTitle(); }
+});
+weekTitleInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') saveWeekTitle(); });
+async function saveWeekTitle() {
+  const wId = getWeekIdentifier(anchorDate); const val = weekTitleInput.value.trim();
+  await db.collection('users').doc(currentUser.uid).collection('weeks').doc(wId).set({ title: val });
+  weekTitleInput.style.display = 'none'; weekTitleText.style.display = 'inline-block'; editWeekBtn.textContent = '🖉';
+}
+function updateWeekTitleUI() {
+  const wId = getWeekIdentifier(anchorDate);
+  weekTitleText.textContent = (weeksMeta[wId] && weeksMeta[wId].title) ? weeksMeta[wId].title : '命名';
+}
+
+document.getElementById('pool-task-add-btn').addEventListener('click', addPoolItem);
+document.getElementById('pool-task-input').addEventListener('keydown', (e) => { if(e.key==='Enter') addPoolItem(); });
+async function addPoolItem() {
+  const input = document.getElementById('pool-task-input'); const noteInput = document.getElementById('pool-task-note');
+  const txt = input.value.trim(); const noteTxt = noteInput.value.trim(); if(!txt) return;
+  const wId = getWeekIdentifier(anchorDate);
+  await db.collection('users').doc(currentUser.uid).collection('pool').add({
+    text: txt, color: selectedPoolColor, note: noteTxt, type: 'week', status: 'pending', weekId: wId, assignedDates: [],
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+  input.value = ''; noteInput.value = '';
+}
+
+if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(err => console.warn(err)); }); }
+</script>
+</body>
+</html>
