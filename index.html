@@ -307,10 +307,10 @@
         </div>
         <div class="pool-input-area">
           <div class="pool-input-row">
-            <input type="text" id="pool-task-input" placeholder="輸入計畫...">
+            <input type="text" id="pool-task-input" placeholder="輸入計畫 ···">
             <button id="pool-task-add-btn">注入</button>
           </div>
-          <input type="text" id="pool-task-note" class="pool-note-input" placeholder="備註...">
+          <input type="text" id="pool-task-note" class="pool-note-input" placeholder=" 備註 ···">
         </div>
         <div class="pool-list" id="pool-list"></div>
       </div>
@@ -337,8 +337,8 @@
         <div><span class="detail-date" id="detail-date-label"></span><span class="detail-sub" id="detail-dow-label"></span></div>
       </div>
 
-      <div style="margin-top: 10px; margin-bottom: 16px; background: #FFF5F5; padding: 12px; border-radius: 10px; border: 1px solid #FADBD8;">
-        <label style="font-size:12px; font-weight:700; color:#C0392B; display:block; margin-bottom:6px;">🎉 今日特殊日子 (如：生日、重要紀念日、考試)</label>
+      <div style="margin-top: 10px; margin-bottom: 16px; background: #FFF9F5; padding: 12px; border-radius: 10px; border: 1px solid #F5E6DA;">
+        <label style="font-size:12px; font-weight:700; color:#C75D3D; display:block; margin-bottom:6px;">✨ 今日特殊日子 (如：生日、重要紀念日、考試)</label>
         <input type="text" id="special-day-input" placeholder="例：朋友生日、期末考、機車路考..." style="width:100%; border:1px solid var(--line); border-radius:6px; padding:8px 10px; font-size:13.5px; outline:none; background:var(--card); box-sizing: border-box;">
         <div class="save-indicator" id="special-day-indicator" style="text-align:right; font-size:11px; color:var(--muted); margin-top:2px;"></div>
       </div>
@@ -625,7 +625,7 @@ async function postponeTaskToTomorrow(dateStr, taskId) {
   await addDistributedTask(tomorrowStr, `[續] ${taskToMove.text}`, taskToMove.color, taskToMove.note, taskToMove.parentId);
   
   await logScoreChange(-3, `延宕任務「${taskToMove.text}」至明天`, dateStr);
-  alert('已流向明天！分數 -3 🩸');
+  alert('已流向明天！分數 －３ 🩸');
 }
 
 function checkAndSyncWeekPlans() {
@@ -708,7 +708,7 @@ async function checkAndCarryOverBubbles() {
     });
     
     // 這時候才真正扣分
-    await logScoreChange(-5, `週計畫「${item.text}」未落實，週日結算觸發漂流`, lastSundayStr);
+    await logScoreChange(-5, `週計畫「${item.text}」未落實，結算觸發漂流`, lastSundayStr);
   }
   
   await batch.commit();
@@ -778,9 +778,9 @@ function renderPoolUI() {
         </label>`;
     }
 
-    const displayNote = item.note ? `✐ ${item.note} ` : `✐ ...`;
+    const displayNote = item.note ? `✐ ${item.note} ` : `✐  ···`;
     const noteSpanHtml = `<span class="editable-note-span" id="note-pool-${item.id}">${escapeHtml(displayNote)}</span>`;
-    let badgeHtml = item.isBubble ? `<span style="font-size:9px; background:#C75D3D; color:#fff; padding:1px 4px; border-radius:3px; margin-right:4px;">🫧 漂流泡泡 (-5)</span>` : '';
+    let badgeHtml = item.isBubble ? `<span style="font-size:9px; background:#C75D3D; color:#fff; padding:1px 4px; border-radius:3px; margin-right:4px;">🫧 漂流泡泡 －５</span>` : '';
 
     div.innerHTML = `
       <div style="display:flex; align-items:flex-start; padding-right:20px;">
@@ -848,7 +848,7 @@ function renderWeekKanbanView() {
     // 💡 檢查有沒有設定特殊日子，有的話就做一個漂亮的小標籤
     let specialDayBadgeHtml = '';
     if (data.specialDay) {
-      specialDayBadgeHtml = `<div style="font-size:10.5px; background:#FADBD8; color:#C0392B; padding:2px 6px; border-radius:4px; margin-top:4px; font-weight:bold; display:inline-block; line-height:1.2; word-break:break-all;">🎉 ${escapeHtml(data.specialDay)}</div>`;
+      specialDayBadgeHtml = `<div style="font-size:11px; background:#EADDD6; color:#C75D3D; padding:2px 6px; border-radius:4px; margin-top:4px; font-weight:bold; display:inline-block;">✨ ${escapeHtml(data.specialDay)}</div>`;
     }
   
     // 把標籤塞進原本的 HTML 裡面（加在日期 num 的後面）
@@ -880,7 +880,7 @@ function renderWeekKanbanView() {
 
     accountingSummaryDiv.innerHTML = `
       <div class="accounting-badge-list">${badgesHtml || '<span style="color:var(--muted); font-style:italic; font-size:10px;">荷包守衛</span>'}</div>
-      <div class="accounting-total-label">${dayTotalSpend > 0 ? `減 $${dayTotalSpend}` : ''}</div>
+      <div class="accounting-total-label">${dayTotalSpend > 0 ? `－ $${dayTotalSpend}` : ''}</div>
     `;
 
     col.appendChild(header);
@@ -891,34 +891,79 @@ function renderWeekKanbanView() {
 }
 
 function renderMonthView() {
-  const year = anchorDate.getFullYear(); const month = anchorDate.getMonth();
-  document.getElementById('period-label').textContent = `${year} 年 ${month+1} 月`;
-  document.getElementById('month-dow-row').innerHTML = WEEKDAY_LABELS.map(l => `<div class="month-dow">${l}</div>`).join('');
+  const grid = document.getElementById('month-grid');
+  grid.innerHTML = '';
 
-  const grid = document.getElementById('month-grid'); grid.innerHTML = '';
-  const firstOfMonth = new Date(year, month, 1); const startDate = getMondayOfWeek(firstOfMonth);
-  const lastOfMonth = new Date(year, month + 1, 0); const endDate = getMondayOfWeek(lastOfMonth);
-  const totalCells = Math.round((addDays(endDate,6) - startDate) / 86400000) + 1;
-  const today = new Date();
+  const year = currentMonthDate.getFullYear();
+  const month = currentMonthDate.getMonth();
 
-  for (let i = 0; i < totalCells; i++) {
-    const d = addDays(startDate, i); const dateStr = toDateStr(d);
-    const data = getDayData(dateStr); const tasks = data.tasks || []; const ledger = data.ledger || [];
-    const outside = d.getMonth() !== month;
+  // 設定當月第一天與最後一天
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
 
-    const cell = document.createElement('div'); cell.className = 'month-cell' + (outside ? ' outside' : '') + (isSameDay(d, today) ? ' is-today' : '');
-    
-    let dotsHtml = '';
-    if (tasks.length > 0) {
-      dotsHtml = '<div class="cell-dots">' + tasks.slice(0,5).map(t => `<span class="dot${t.done ? ' done' : ''}" style="background:${MORANDI_COLORS[t.color || 'red']}"></span>`).join('') + '</div>';
+  // 計算週一到週日的對齊（符合你的週一開頭習慣）
+  let startOffset = firstDay.getDay() - 1;
+  if (startOffset < 0) startOffset = 6; // 週日變成 6
+
+  const totalDays = lastDay.getDate();
+
+  // 1. 填補當月第一天前的前期空白
+  for (let i = 0; i < startOffset; i++) {
+    const empty = document.createElement('div');
+    empty.className = 'month-day empty';
+    grid.appendChild(empty);
+  }
+
+  // 2. 開始渲染每一天
+  for (let day = 1; day <= totalDays; day++) {
+    const d = new Date(year, month, day);
+    const dateStr = toDateStr(d);
+    const data = getDayData(dateStr); // 取得當天的資料庫資料
+
+    const dayDiv = document.createElement('div');
+    dayDiv.className = 'month-day';
+
+    // 如果是今天，加上特殊的 active 樣式
+    if (dateStr === toDateStr(new Date())) {
+      dayDiv.classList.add('today-active');
     }
-    
-    let dayTotalSpend = ledger.reduce((sum, item) => sum + (item.amount || 0), 0);
-    const spendTagHtml = dayTotalSpend > 0 ? `<div class="expense-tag">$${dayTotalSpend}</div>` : '';
 
-    cell.innerHTML = `<span class="cell-num">${d.getDate()}</span>${spendTagHtml}${dotsHtml}`;
-    cell.addEventListener('click', () => openDayDetail(dateStr));
-    grid.appendChild(cell);
+    // 💡 關鍵改動：檢查有沒有「特殊日子」的文字
+    let specialDayHtml = '';
+    if (data && data.specialDay) {
+      specialDayHtml = `
+        <div style="
+          font-size: 10px; 
+          background: #FFF9F5; 
+          color: #C75D3D; 
+          padding: 1px 4px; 
+          border-radius: 3px; 
+          margin-top: 4px; 
+          font-weight: bold; 
+          text-overflow: ellipsis; 
+          overflow: hidden; 
+          white-space: nowrap;
+          border: 1px solid #F5E6DA;
+          max-width: 100%;
+          box-sizing: border-box;
+        " title="${escapeHtml(data.specialDay)}">
+          ✨ ${escapeHtml(data.specialDay)}
+        </div>
+      `;
+    }
+
+    // 顯示日期數字與特殊日子標籤
+    dayDiv.innerHTML = `
+      <span class="day-num">${day}</span>
+      ${specialDayHtml}
+    `;
+
+    // 點擊月曆格子，一樣可以打開當天的詳細彈窗
+    dayDiv.addEventListener('click', () => {
+      openDayDetail(dateStr);
+    });
+
+    grid.appendChild(dayDiv);
   }
 }
 
@@ -954,7 +999,7 @@ function renderDayDetail(dateStr) {
       const item = document.createElement('div'); item.className = 'task-item';
       item.style.borderLeft = `3px solid ${MORANDI_COLORS[t.color || 'none']}`; paddingLeft = '6px';
       
-      const displayNote = t.note ? `✐ ${t.note} (點擊編輯)` : `✐ 點擊添加備註...`;
+      const displayNote = t.note ? `✐ ${t.note} (點擊編輯)` : `✐`;
       const noteSpanHtml = `<span class="editable-note-span" id="note-day-${t.id}">${escapeHtml(displayNote)}</span>`;
       const postponeBtnHtml = (!t.done && !t.postponed) ? `<button class="postpone-btn" id="postpone-btn-${t.id}">▶︎▶︎</button>` : '';
 
@@ -979,13 +1024,13 @@ function renderDayDetail(dateStr) {
     });
   }
 
-  // 2. 💸 渲染今日記帳列表 (完美保留你改的「今天沒有花錢」)
+  // 2. 💸 渲染今日記帳列表 
   const ledger = data.ledger || []; const ledgerListEl = document.getElementById('ledger-list'); ledgerListEl.innerHTML = '';
   let totalSpend = ledger.reduce((sum, item) => sum + (item.amount || 0), 0);
   document.getElementById('detail-day-spend-total').textContent = `共 $${totalSpend}`;
 
   if(ledger.length === 0) {
-    ledgerListEl.innerHTML = `<div style="font-size:11px; color:var(--muted); font-style:italic;">今天沒有花錢</div>`;
+    ledgerListEl.innerHTML = `<div style="font-size:11px; color:var(--muted); font-style:italic;">今天沒有花錢~~~</div>`;
   } else {
     ledger.forEach(item => {
       const ledgDiv = document.createElement('div'); ledgDiv.className = 'ledger-item';
@@ -1029,7 +1074,7 @@ document.getElementById('special-day-input').addEventListener('input', e => {
 
 /* 自動儲存月目標 */
 document.getElementById('month-goal-input').addEventListener('input', (e) => {
-  clearTimeout(monthGoalTimer); const mStr = toMonthStr(anchorDate); const indicator = document.getElementById('month-goal-indicator'); indicator.textContent = '同步中...';
+  clearTimeout(monthGoalTimer); const mStr = toMonthStr(anchorDate); const indicator = document.getElementById('month-goal-indicator'); indicator.textContent = '同步中 ···';
   monthGoalTimer = setTimeout(async () => {
     await db.collection('users').doc(currentUser.uid).collection('months').doc(mStr).set({ goal: e.target.value }, { merge: true });
     indicator.textContent = '儲存成功'; setTimeout(() => { indicator.textContent = ''; }, 1500);
