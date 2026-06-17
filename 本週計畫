@@ -665,12 +665,14 @@ function attachFirestoreListeners() {
     updateMonthGoalUI();
   });
 
-  // 4. 監聽本週池
-  unsubscribePool = userDocRef.collection('pool').order('createdAt', 'asc').onSnapshot(snapshot => {
+ // 4. 監聽本週池（修正版）
+  unsubscribePool = userDocRef.collection('pool').onSnapshot(snapshot => {
     globalPool = [];
     snapshot.forEach(doc => {
       globalPool.push({ id: doc.id, ...doc.data() });
     });
+    // 改用任務本身的 id 或直接在前端排，就不會因為伺服器時間還沒生出來而崩潰
+    globalPool.sort((a, b) => a.id.localeCompare(b.id)); 
     renderPoolUI();
   });
 }
@@ -793,55 +795,7 @@ function updateWeekTitleUI() {
    ============================================================ */
 document.getElementById('pool-task-add-btn').addEventListener('click', addPoolItem);
 document.getElementById('pool-task-input').addEventListener('keydown', (e) => { if(e.key === 'Enter') addPoolItem(); });
-function renderPoolUI() {
-  const container = document.getElementById('pool-list');
-  if (!container) return;
-  container.innerHTML = '';
-  
-  if (globalPool.length === 0) {
-    container.innerHTML = `<div style="font-size:12px; color:var(--muted); font-style:italic;">池子空空的，寫下任務吧！</div>`;
-    return;
-  }
 
-  const monday = getMondayOfWeek(anchorDate);
-
-  globalPool.forEach(item => {
-    const div = document.createElement('div');
-    div.className = 'pool-item';
-    div.style.borderLeft = `4px solid ${MORANDI_COLORS[item.color || 'none']}`;
-    
-    // 生成分配下拉選單
-    let optionsHtml = `<option value="">📍 分配到日期...</option>`;
-    for(let i=0; i<7; i++) {
-      const targetDate = addDays(monday, i);
-      const dateStr = toDateStr(targetDate);
-      optionsHtml += `<option value="${dateStr}">${WEEKDAY_LABELS_SHORT[i]} (${targetDate.getDate()}日)</option>`;
-    }
-
-    div.innerHTML = `
-      <span class="pool-item-text">${escapeHtml(item.text)}</span>
-      <button class="pool-item-del" style="position:absolute; right:6px; top:6px; border:none; background:transparent; color:var(--muted); cursor:pointer;">×</button>
-      <div class="assign-row" style="margin-top:4px;">
-        <select class="assign-select" style="font-size:11px; border:1px solid var(--line); border-radius:4px; padding:2px 4px; color:var(--muted); background:var(--card); cursor:pointer;">${optionsHtml}</select>
-      </div>
-    `;
-
-    // 監聽分配選單
-    div.querySelector('.assign-select').addEventListener('change', async (e) => {
-      const chosenDate = e.target.value;
-      if(!chosenDate) return;
-      await addTask(chosenDate, item.text, item.color || 'none');
-      await db.collection('users').doc(currentUser.uid).collection('pool').doc(item.id).delete();
-    });
-
-    // 監聽刪除按鈕
-    div.querySelector('.pool-item-del').addEventListener('click', async () => {
-      await db.collection('users').doc(currentUser.uid).collection('pool').doc(item.id).delete();
-    });
-
-    container.appendChild(div);
-  });
-}
 async function addPoolItem() {
   const input = document.getElementById('pool-task-input');
   const txt = input.value.trim();
