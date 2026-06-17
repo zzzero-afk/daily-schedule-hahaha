@@ -2,247 +2,465 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0">
-<title>手帳 · 我的行事曆</title>
-
-<!-- PWA -->
-<link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#FAF8F5">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="手帳">
-<link rel="apple-touch-icon" href="icon-192.png">
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>手帳 · 週計畫</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
 
 <style>
-  :root{
-    --bg:#FAF8F5;
-    --ink:#2B2825;
-    --muted:#8C8579;
-    --accent:#C75D3D;
-    --accent-soft:#EADDD6;
-    --done:#B8B2A6;
-    --line:#E8E3DA;
-    --card:#FFFFFF;
-    --radius:14px;
-    --shadow:0 2px 10px rgba(43,40,37,0.05);
-  }
+/* ===== CSS Variables ===== */
+:root {
+  --bg:          #FAF8F5;
+  --bg2:         #F3F0EB;
+  --ink:         #2B2825;
+  --muted:       #8C8579;
+  --accent:      #C75D3D;
+  --accent-soft: #EADDD6;
+  --done:        #B8B2A6;
+  --line:        #E8E3DA;
+  --card:        #FFFFFF;
+  --radius:      12px;
+  --shadow:      0 2px 12px rgba(43,40,37,0.06);
+  --shadow-lg:   0 4px 24px rgba(43,40,37,0.10);
 
-  *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;}
-  body{
-    background:var(--bg);
-    color:var(--ink);
-    font-family:'Noto Sans TC', sans-serif;
-    -webkit-font-smoothing:antialiased;
-    min-height:100vh;
-    padding-bottom:env(safe-area-inset-bottom);
-  }
-  h1,h2,h3{font-family:'Noto Serif TC', serif; margin:0;}
-  button{font-family:inherit;}
+  /* 莫蘭迪大地色標籤 */
+  --tag-red:     #C4806A;  /* 煙燻紅 */
+  --tag-green:   #7A9E8E;  /* 鼠尾草綠 */
+  --tag-blue:    #7A96AD;  /* 迷霧藍 */
+  --tag-yellow:  #C4A96A;  /* 芥末黃 */
+  --tag-purple:  #9E8EAD;  /* 薰衣草紫 */
+  --tag-stone:   #9E9180;  /* 燧石灰 */
+}
 
-  /* ---------- 登入畫面 ---------- */
-  #login-screen{
-    position:fixed; inset:0;
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    gap:28px; background:var(--bg); z-index:100; padding:24px; text-align:center;
-  }
-  #login-screen .brand-mark{
-    font-family:'Noto Serif TC', serif;
-    font-size:15px; letter-spacing:0.4em; color:var(--muted);
-  }
-  #login-screen h1{font-size:32px; font-weight:700;}
-  #login-screen p{color:var(--muted); font-size:14px; max-width:280px; line-height:1.7; margin:0;}
-  .google-btn{
-    display:flex; align-items:center; gap:10px;
-    background:var(--card); border:1px solid var(--line); border-radius:999px;
-    padding:13px 26px; font-size:15px; font-weight:500; color:var(--ink);
-    cursor:pointer; box-shadow:var(--shadow); transition:transform .15s ease, box-shadow .15s ease;
-  }
-  .google-btn:hover{transform:translateY(-1px); box-shadow:0 4px 14px rgba(43,40,37,0.09);}
-  .google-btn svg{width:18px; height:18px;}
-  #login-error{color:var(--accent); font-size:13px; min-height:18px;}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Noto Sans TC', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+h1, h2, h3 { font-family: 'Noto Serif TC', serif; margin: 0; }
+button { font-family: inherit; cursor: pointer; }
+input, textarea { font-family: inherit; }
 
-  /* ---------- App Shell ---------- */
-  #app{display:none; max-width:760px; margin:0 auto; padding:18px 18px 80px;}
-  #app.visible{display:block;}
+/* ===== Loading ===== */
+#loading-screen {
+  position: fixed; inset: 0; background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 300; color: var(--muted); font-size: 13px; letter-spacing: 0.15em;
+}
 
-  header.topbar{
-    display:flex; align-items:center; justify-content:space-between;
-    padding:6px 2px 18px; gap:10px;
-  }
-  .topbar-left{display:flex; align-items:baseline; gap:10px;}
-  .topbar-left .eyebrow{font-size:11px; letter-spacing:0.25em; color:var(--muted); font-weight:500;}
-  .topbar-left h1{font-size:22px;}
-  .topbar-right{display:flex; align-items:center; gap:10px;}
-  #user-avatar{width:30px; height:30px; border-radius:50%; border:1px solid var(--line); cursor:pointer;}
-  #logout-btn{
-    border:none; background:none; color:var(--muted); font-size:12px; cursor:pointer;
-    text-decoration:underline; padding:4px;
-  }
+/* ===== Login ===== */
+#login-screen {
+  position: fixed; inset: 0;
+  display: none; flex-direction: column; align-items: center; justify-content: center;
+  gap: 28px; background: var(--bg); z-index: 200; padding: 24px; text-align: center;
+}
+#login-screen.visible { display: flex; }
+.brand-mark { font-family:'Noto Serif TC',serif; font-size:12px; letter-spacing:0.5em; color:var(--muted); }
+#login-screen h1 { font-size: 30px; }
+#login-screen p { color: var(--muted); font-size: 14px; max-width: 280px; line-height: 1.7; margin: 0; }
+.google-btn {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 999px;
+  padding: 13px 26px; font-size: 15px; font-weight: 500; color: var(--ink);
+  box-shadow: var(--shadow); transition: transform .15s, box-shadow .15s;
+}
+.google-btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-lg); }
+.google-btn svg { width: 18px; height: 18px; }
+#login-error { color: var(--accent); font-size: 13px; min-height: 18px; }
 
-  /* 視圖切換 */
-  .view-switch{
-    display:flex; background:var(--card); border:1px solid var(--line); border-radius:999px;
-    padding:3px; gap:2px; width:fit-content; margin:0 auto 18px;
-  }
-  .view-switch button{
-    border:none; background:none; padding:7px 18px; border-radius:999px; font-size:13px;
-    color:var(--muted); cursor:pointer; transition:all .15s ease; font-weight:500;
-  }
-  .view-switch button.active{background:var(--ink); color:var(--bg);}
+/* ===== App Shell ===== */
+#app { display: none; flex-direction: column; height: 100vh; overflow: hidden; }
+#app.visible { display: flex; }
 
-  /* 月份導覽 */
-  .nav-row{display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:14px; flex-wrap:nowrap;}
-  .nav-row button{
-    border:none; background:none; color:var(--muted); cursor:pointer;
-    width:30px; height:30px; border-radius:50%; font-size:16px;
-    display:flex; align-items:center; justify-content:center; flex:0 0 auto;
-  }
-  .nav-row button:hover{background:var(--accent-soft); color:var(--accent);}
-  .nav-row .period-label{font-size:16px; font-weight:500; min-width:130px; text-align:center; font-family:'Noto Serif TC',serif;}
-  .today-btn{
-    font-size:11px; color:var(--accent); border:1px solid var(--accent-soft); background:var(--accent-soft);
-    border-radius:999px; padding:3px 11px; cursor:pointer; margin-left:4px; white-space:nowrap; flex:0 0 auto;
-  }
+/* ===== Top Bar ===== */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px 10px; flex-shrink: 0;
+  border-bottom: 1px solid var(--line); background: var(--bg);
+  gap: 12px;
+}
+.topbar-left { display: flex; align-items: baseline; gap: 10px; }
+.topbar-left .eyebrow { font-size: 10px; letter-spacing: 0.4em; color: var(--muted); font-weight: 500; }
+.topbar-left h1 { font-size: 20px; }
+.topbar-center { display: flex; align-items: center; gap: 8px; flex: 1; justify-content: center; }
+.topbar-right { display: flex; align-items: center; gap: 8px; }
 
-  /* ---------- 週檢視 ---------- */
-  #week-view .day-row{
-    display:flex; align-items:flex-start; gap:12px;
-    padding:14px 4px; border-bottom:1px solid var(--line); cursor:pointer;
-    transition:background .12s ease;
-  }
-  #week-view .day-row:hover{background:rgba(0,0,0,0.015);}
-  #week-view .day-row:last-child{border-bottom:none;}
-  .day-date-badge{
-    flex:0 0 46px; text-align:center; padding-top:2px;
-  }
-  .day-date-badge .dow{font-size:11px; color:var(--muted); display:block; margin-bottom:2px;}
-  .day-date-badge .num{font-size:18px; font-weight:700; font-family:'Noto Serif TC',serif;}
-  .day-row.is-today .day-date-badge .num{
-    color:var(--bg); background:var(--accent); border-radius:50%;
-    width:30px; height:30px; display:flex; align-items:center; justify-content:center; margin:0 auto;
-  }
-  .day-summary{flex:1; min-width:0;}
-  .day-summary .task-line{
-    font-size:13.5px; color:var(--ink); padding:2px 0; display:flex; align-items:center; gap:7px;
-  }
-  .day-summary .task-line.done{color:var(--done); text-decoration:line-through;}
-  .day-summary .task-dot{width:5px; height:5px; border-radius:50%; background:var(--accent); flex:0 0 auto;}
-  .day-summary .task-line.done .task-dot{background:var(--done);}
-  .day-summary .empty-hint{font-size:12.5px; color:var(--muted); font-style:italic;}
-  .day-summary .more-hint{font-size:11.5px; color:var(--muted); margin-top:2px;}
-  .diary-flag{
-    flex:0 0 auto; width:7px; height:7px; border-radius:50%; background:var(--accent);
-    margin-top:8px; opacity:0.6;
-  }
+.view-switch {
+  display: flex; background: var(--bg2); border: 1px solid var(--line); border-radius: 999px;
+  padding: 3px; gap: 2px;
+}
+.view-switch button {
+  border: none; background: none; padding: 5px 14px; border-radius: 999px; font-size: 12px;
+  color: var(--muted); transition: all .15s; font-weight: 500;
+}
+.view-switch button.active { background: var(--ink); color: var(--bg); }
 
-  /* ---------- 月檢視 ---------- */
-  .month-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:6px;}
-  .month-dow{text-align:center; font-size:11px; color:var(--muted); padding-bottom:6px;}
-  .month-cell{
-    aspect-ratio:1/1; border-radius:10px; border:1px solid var(--line); background:var(--card);
-    padding:6px 5px; cursor:pointer; display:flex; flex-direction:column; gap:3px;
-    transition:background .12s ease, border-color .12s ease; position:relative; overflow:hidden;
-  }
-  .month-cell:hover{border-color:var(--accent-soft);}
-  .month-cell.outside{opacity:0.32;}
-  .month-cell .cell-num{font-size:12.5px; font-weight:500; font-family:'Noto Serif TC',serif;}
-  .month-cell.is-today{border-color:var(--accent); background:var(--accent-soft);}
-  .month-cell.is-today .cell-num{color:var(--accent); font-weight:700;}
-  .month-cell .cell-dots{display:flex; gap:2px; flex-wrap:wrap; margin-top:auto;}
-  .month-cell .dot{width:4px; height:4px; border-radius:50%; background:var(--accent);}
-  .month-cell .dot.done{background:var(--done);}
-  .month-cell .diary-mark{
-    position:absolute; top:5px; right:6px; width:5px; height:5px; border-radius:50%;
-    background:var(--ink); opacity:0.3;
-  }
+.nav-row { display: flex; align-items: center; gap: 6px; }
+.nav-btn {
+  border: none; background: none; color: var(--muted);
+  width: 26px; height: 26px; border-radius: 50%; font-size: 15px;
+  display: flex; align-items: center; justify-content: center; transition: background .12s;
+}
+.nav-btn:hover { background: var(--accent-soft); color: var(--accent); }
+.period-label { font-size: 13px; font-weight: 500; font-family:'Noto Serif TC',serif; white-space: nowrap; }
+.today-btn {
+  font-size: 11px; color: var(--accent); border: 1px solid var(--accent-soft);
+  background: var(--accent-soft); border-radius: 999px; padding: 2px 10px; white-space: nowrap;
+}
 
-  /* ---------- 日期詳情卡（共用） ---------- */
-  #day-detail{display:none; margin-top:20px;}
-  #day-detail.visible{display:block;}
-  .detail-card{
-    background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow);
-    border-left:3px solid var(--accent); padding:20px 22px; position:relative;
-  }
-  .detail-card .detail-head{
-    display:flex; align-items:baseline; justify-content:space-between; margin-bottom:16px;
-  }
-  .detail-card .detail-date{font-size:18px; font-family:'Noto Serif TC',serif; font-weight:700;}
-  .detail-card .detail-sub{font-size:12px; color:var(--muted); margin-left:8px;}
-  .close-detail{border:none; background:none; color:var(--muted); font-size:20px; cursor:pointer; line-height:1; padding:2px 6px;}
+#user-avatar { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--line); }
+#logout-btn { border: none; background: none; color: var(--muted); font-size: 11px; text-decoration: underline; }
 
-  .task-list{margin-bottom:18px;}
-  .task-item{
-    display:flex; align-items:flex-start; gap:10px; padding:7px 0; font-size:14.5px;
-  }
-  .task-checkbox{
-    flex:0 0 auto; width:19px; height:19px; border-radius:5px; border:1.5px solid var(--line);
-    cursor:pointer; margin-top:1px; display:flex; align-items:center; justify-content:center;
-    transition:all .12s ease; background:var(--card);
-  }
-  .task-checkbox.checked{background:var(--accent); border-color:var(--accent);}
-  .task-checkbox.checked::after{
-    content:''; width:9px; height:6px; border-left:2px solid white; border-bottom:2px solid white;
-    transform:rotate(-45deg) translate(0,-1px);
-  }
-  .task-text{flex:1; word-break:break-word; line-height:1.5; padding-top:0.5px;}
-  .task-text.done{color:var(--done); text-decoration:line-through;}
-  .task-del{
-    border:none; background:none; color:var(--muted); opacity:0; cursor:pointer; font-size:15px;
-    padding:0 4px; transition:opacity .12s ease;
-  }
-  .task-item:hover .task-del{opacity:0.6;}
-  .task-del:hover{opacity:1 !important; color:var(--accent);}
+/* ===== Main Layout ===== */
+.main-content {
+  display: flex; flex: 1; overflow: hidden; gap: 0;
+}
 
-  .add-task-row{display:flex; gap:8px; margin-top:10px;}
-  .add-task-row input{
-    flex:1; border:1px solid var(--line); border-radius:8px; padding:9px 12px; font-size:14px;
-    font-family:inherit; background:var(--bg); color:var(--ink);
-  }
-  .add-task-row input:focus{outline:none; border-color:var(--accent);}
-  .add-task-row button{
-    border:none; background:var(--ink); color:var(--bg); border-radius:8px; padding:9px 16px;
-    font-size:14px; cursor:pointer; font-weight:500;
-  }
-  .add-task-row button:hover{background:var(--accent);}
+/* ===== Left Panel (Month Goal + Week Pool) ===== */
+.left-panel {
+  width: 260px; flex-shrink: 0;
+  display: flex; flex-direction: column;
+  border-right: 1px solid var(--line);
+  background: var(--card);
+  overflow: hidden;
+}
 
-  .diary-section label{
-    font-size:11.5px; letter-spacing:0.15em; color:var(--muted); font-weight:500; display:block; margin-bottom:6px;
-  }
-  .diary-section textarea{
-    width:100%; min-height:110px; border:1px solid var(--line); border-radius:10px;
-    padding:12px 14px; font-size:14px; font-family:inherit; resize:vertical;
-    background:var(--bg); color:var(--ink); line-height:1.6;
-  }
-  .diary-section textarea:focus{outline:none; border-color:var(--accent);}
-  .save-indicator{font-size:11px; color:var(--muted); margin-top:6px; height:14px; transition:opacity .3s ease;}
+.panel-section {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.panel-section:last-child { border-bottom: none; }
 
-  /* ---------- 載入中 ---------- */
-  #loading-screen{
-    position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center;
-    z-index:200; color:var(--muted); font-size:13px; letter-spacing:0.1em;
-  }
+.section-title {
+  font-size: 10px; letter-spacing: 0.3em; color: var(--muted); font-weight: 700;
+  text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+}
+.section-title .dot-marker {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0;
+}
 
-  @media (max-width:480px){
-    .day-date-badge{flex:0 0 38px;}
-    .detail-card{padding:16px;}
-    .month-cell{padding:4px 3px;}
-  }
+/* Month Goal */
+.month-goal-section { flex-shrink: 0; }
+.month-goal-header {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;
+}
+#month-goal-input {
+  width: 100%; border: 1px solid var(--line); border-radius: 8px;
+  padding: 9px 11px; font-size: 13px; background: var(--bg);
+  color: var(--ink); resize: none; min-height: 70px; line-height: 1.6;
+}
+#month-goal-input:focus { outline: none; border-color: var(--accent); }
+.goal-save-hint { font-size: 10px; color: var(--muted); margin-top: 4px; height: 12px; }
+
+/* Week Pool */
+.week-pool-section {
+  flex: 1; overflow-y: auto; display: flex; flex-direction: column; min-height: 0;
+}
+.week-pool-section .section-inner { flex: 1; overflow-y: auto; }
+
+.pool-task-item {
+  display: flex; align-items: flex-start; gap: 7px;
+  padding: 6px 0; border-bottom: 1px solid var(--line);
+  position: relative;
+}
+.pool-task-item:last-child { border-bottom: none; }
+.pool-tag-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px;
+}
+.pool-task-text {
+  flex: 1; font-size: 13px; line-height: 1.5; word-break: break-word;
+  padding-right: 4px;
+}
+.pool-task-text.done { color: var(--done); text-decoration: line-through; }
+.pool-task-actions { display: flex; align-items: center; gap: 3px; flex-shrink: 0; }
+.pool-assign-btn {
+  border: none; background: var(--bg2); color: var(--muted);
+  border-radius: 6px; padding: 2px 6px; font-size: 10px; white-space: nowrap;
+  border: 1px solid var(--line); transition: all .12s;
+}
+.pool-assign-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.pool-checkbox {
+  width: 15px; height: 15px; border-radius: 4px; border: 1.5px solid var(--line);
+  flex-shrink: 0; margin-top: 3px; display: flex; align-items: center; justify-content: center;
+  background: var(--card); transition: all .12s;
+}
+.pool-checkbox.checked { background: var(--accent); border-color: var(--accent); }
+.pool-checkbox.checked::after {
+  content: ''; width: 7px; height: 5px;
+  border-left: 2px solid white; border-bottom: 2px solid white;
+  transform: rotate(-45deg) translate(0,-1px);
+}
+.pool-del-btn {
+  border: none; background: none; color: var(--muted); font-size: 14px;
+  opacity: 0; padding: 0 2px; transition: opacity .12s;
+}
+.pool-task-item:hover .pool-del-btn { opacity: 0.6; }
+.pool-del-btn:hover { opacity: 1 !important; color: var(--accent); }
+
+.add-pool-row { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.add-pool-row input {
+  width: 100%; border: 1px solid var(--line); border-radius: 8px;
+  padding: 8px 10px; font-size: 13px; background: var(--bg); color: var(--ink);
+}
+.add-pool-row input:focus { outline: none; border-color: var(--accent); }
+.add-pool-row .tag-row {
+  display: flex; align-items: center; gap: 5px; flex-wrap: wrap;
+}
+.add-pool-row .tag-row span { font-size: 10px; color: var(--muted); }
+.tag-picker { display: flex; gap: 5px; }
+.tag-dot-btn {
+  width: 14px; height: 14px; border-radius: 50%; border: 2px solid transparent;
+  padding: 0; transition: transform .12s, border-color .12s;
+}
+.tag-dot-btn.selected { border-color: var(--ink); transform: scale(1.25); }
+.add-pool-row .btn-add-pool {
+  width: 100%; border: none; background: var(--ink); color: var(--bg);
+  border-radius: 8px; padding: 8px; font-size: 13px; font-weight: 500;
+  transition: background .12s;
+}
+.add-pool-row .btn-add-pool:hover { background: var(--accent); }
+
+/* ===== Right Panel: Week Board ===== */
+.week-board-wrapper {
+  flex: 1; overflow: auto; padding: 0;
+  display: flex; flex-direction: column;
+}
+
+/* Month view area */
+#month-view-area {
+  flex: 1; overflow-y: auto; padding: 20px;
+  display: none;
+}
+#month-view-area.visible { display: block; }
+
+/* Week view area */
+#week-view-area {
+  flex: 1; overflow: hidden;
+  display: flex; flex-direction: column;
+}
+#week-view-area.hidden { display: none; }
+
+/* Week name bar */
+.week-name-bar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 16px 8px; flex-shrink: 0;
+  border-bottom: 1px solid var(--line); background: var(--bg);
+}
+.week-name-bar .week-custom-label {
+  font-family: 'Noto Serif TC', serif; font-size: 15px; font-weight: 700;
+  color: var(--ink); flex: 1;
+}
+.week-name-bar .week-default-range {
+  font-size: 11px; color: var(--muted);
+}
+.edit-week-name-btn {
+  border: none; background: none; color: var(--muted); font-size: 12px;
+  border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px;
+  transition: all .12s;
+}
+.edit-week-name-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Days columns */
+.days-columns {
+  flex: 1; overflow-x: auto; overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(130px, 1fr));
+  align-items: start;
+}
+
+.day-col {
+  border-right: 1px solid var(--line); padding: 0;
+  display: flex; flex-direction: column; min-height: 100%;
+}
+.day-col:last-child { border-right: none; }
+
+.day-col-header {
+  padding: 10px 10px 8px; border-bottom: 1px solid var(--line);
+  text-align: center; flex-shrink: 0; background: var(--bg);
+  position: sticky; top: 0; z-index: 1;
+}
+.day-col-header .dow-label {
+  font-size: 10px; color: var(--muted); letter-spacing: 0.1em; font-weight: 500;
+}
+.day-col-header .date-num {
+  font-size: 20px; font-family: 'Noto Serif TC', serif; font-weight: 700;
+  margin: 2px 0; line-height: 1.2;
+}
+.day-col-header .date-num-inner {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 50%;
+}
+.day-col.is-today .day-col-header .date-num-inner {
+  background: var(--accent); color: white;
+}
+.day-col-header .month-label {
+  font-size: 10px; color: var(--muted);
+}
+
+.day-tasks {
+  flex: 1; padding: 8px 8px 6px; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 4px;
+}
+
+/* Day task item */
+.day-task-item {
+  display: flex; align-items: flex-start; gap: 5px;
+  padding: 5px 6px; border-radius: 7px; background: var(--bg2);
+  border: 1px solid transparent; transition: border-color .12s;
+  position: relative;
+}
+.day-task-item:hover { border-color: var(--line); }
+.day-task-item.from-pool {
+  background: var(--accent-soft); 
+}
+
+.day-task-tag-dot {
+  width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 5px;
+}
+.day-task-check {
+  width: 14px; height: 14px; border-radius: 4px; border: 1.5px solid var(--line);
+  flex-shrink: 0; margin-top: 3px; display: flex; align-items: center; justify-content: center;
+  background: var(--card); transition: all .12s;
+}
+.day-task-check.checked { background: var(--accent); border-color: var(--accent); }
+.day-task-check.checked::after {
+  content: ''; width: 6px; height: 4px;
+  border-left: 1.5px solid white; border-bottom: 1.5px solid white;
+  transform: rotate(-45deg) translate(0,-1px);
+}
+.day-task-label {
+  flex: 1; font-size: 12px; line-height: 1.5; word-break: break-word; padding-top: 1px;
+}
+.day-task-label.done { color: var(--done); text-decoration: line-through; }
+.day-task-del {
+  border: none; background: none; color: var(--muted); font-size: 13px;
+  opacity: 0; padding: 0 2px; transition: opacity .12s; line-height: 1;
+}
+.day-task-item:hover .day-task-del { opacity: 0.5; }
+.day-task-del:hover { opacity: 1 !important; color: var(--accent); }
+
+/* Pool-badge on day task */
+.pool-badge {
+  font-size: 9px; color: var(--muted); background: var(--card);
+  border-radius: 4px; padding: 1px 4px; margin-left: 3px; white-space: nowrap;
+}
+
+/* Add task in day col */
+.day-add-row {
+  display: flex; gap: 4px; padding: 6px 8px 8px; flex-shrink: 0;
+}
+.day-add-row input {
+  flex: 1; border: 1px solid var(--line); border-radius: 7px;
+  padding: 5px 8px; font-size: 12px; background: var(--bg); color: var(--ink);
+  min-width: 0;
+}
+.day-add-row input:focus { outline: none; border-color: var(--accent); }
+.day-add-row button {
+  border: none; background: var(--ink); color: var(--bg);
+  border-radius: 7px; padding: 5px 9px; font-size: 12px; font-weight: 500;
+  transition: background .12s; white-space: nowrap;
+}
+.day-add-row button:hover { background: var(--accent); }
+
+/* ===== Month View ===== */
+.month-goal-display {
+  background: var(--card); border-radius: var(--radius); border: 1px solid var(--line);
+  padding: 14px 18px; margin-bottom: 16px;
+}
+.month-goal-display .label { font-size: 10px; letter-spacing: 0.3em; color: var(--muted); font-weight: 700; margin-bottom: 6px; }
+.month-goal-display .goal-text { font-size: 14px; line-height: 1.7; color: var(--ink); white-space: pre-wrap; }
+.month-goal-display .empty { color: var(--muted); font-size: 13px; font-style: italic; }
+
+.month-grid-wrap { }
+.month-dow-row, .month-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;
+}
+.month-dow { text-align: center; font-size: 11px; color: var(--muted); padding-bottom: 4px; }
+.month-cell {
+  aspect-ratio: 1/1; border-radius: 10px; border: 1px solid var(--line); background: var(--card);
+  padding: 5px; cursor: pointer; display: flex; flex-direction: column; gap: 2px;
+  transition: background .12s, border-color .12s; overflow: hidden;
+}
+.month-cell:hover { border-color: var(--accent-soft); }
+.month-cell.outside { opacity: 0.3; }
+.month-cell .cell-num { font-size: 11.5px; font-weight: 500; font-family:'Noto Serif TC',serif; }
+.month-cell.is-today { border-color: var(--accent); background: var(--accent-soft); }
+.month-cell.is-today .cell-num { color: var(--accent); font-weight: 700; }
+.month-cell .cell-dots { display: flex; gap: 2px; flex-wrap: wrap; margin-top: auto; }
+.cell-dot { width: 4px; height: 4px; border-radius: 50%; }
+
+/* ===== Assign Dropdown ===== */
+.assign-dropdown {
+  position: fixed; z-index: 500;
+  background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+  box-shadow: var(--shadow-lg); padding: 6px; min-width: 130px;
+}
+.assign-dropdown button {
+  display: block; width: 100%; text-align: left;
+  border: none; background: none; padding: 7px 12px; font-size: 13px;
+  border-radius: 6px; color: var(--ink); transition: background .1s;
+}
+.assign-dropdown button:hover { background: var(--accent-soft); color: var(--accent); }
+
+/* ===== Week Name Edit Modal ===== */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(43,40,37,0.35); z-index: 600;
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+}
+.modal-box {
+  background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow-lg);
+  padding: 24px; width: 100%; max-width: 360px;
+}
+.modal-box h3 { font-size: 16px; margin-bottom: 14px; }
+.modal-box input {
+  width: 100%; border: 1px solid var(--line); border-radius: 8px;
+  padding: 10px 12px; font-size: 14px; background: var(--bg); color: var(--ink); margin-bottom: 14px;
+}
+.modal-box input:focus { outline: none; border-color: var(--accent); }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.btn-cancel {
+  border: 1px solid var(--line); background: none; color: var(--muted);
+  border-radius: 8px; padding: 8px 16px; font-size: 14px;
+}
+.btn-confirm {
+  border: none; background: var(--ink); color: var(--bg);
+  border-radius: 8px; padding: 8px 16px; font-size: 14px; font-weight: 500;
+}
+.btn-confirm:hover { background: var(--accent); }
+
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--line); border-radius: 10px; }
+
+/* ===== Mobile ===== */
+@media (max-width: 700px) {
+  .left-panel { width: 220px; }
+  .days-columns { grid-template-columns: repeat(7, minmax(110px, 1fr)); }
+}
+@media (max-width: 500px) {
+  .main-content { flex-direction: column; }
+  .left-panel { width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--line); }
+  .week-board-wrapper { overflow: visible; }
+  .days-columns { grid-template-columns: repeat(7, minmax(100px, 1fr)); }
+}
 </style>
 </head>
 <body>
 
 <div id="loading-screen">載入中 ···</div>
 
-<!-- 登入畫面 -->
-<div id="login-screen" style="display:none;">
+<!-- Login -->
+<div id="login-screen">
   <div class="brand-mark">JOURNAL · PLANNER</div>
-  <h1>我的手帳</h1>
-  <p>一個安靜記事的地方。登入後，所有待辦與日記會即時同步到你的所有裝置。</p>
+  <h1>P人消滅計畫</h1>
+  <p>三層連動手帳，月目標 → 週計畫 → 每日清單，即時多裝置同步。</p>
   <button class="google-btn" id="google-login-btn">
     <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.9 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.5 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 16 19 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.5 29.6 4 24 4c-7.4 0-13.8 4.2-17 10.7z"/><path fill="#4CAF50" d="M24 44c5.4 0 10.3-2.1 14-5.5l-6.5-5.4C29.4 35 26.8 36 24 36c-5.3 0-9.7-3.1-11.3-7.6l-6.6 5.1C9.9 39.7 16.4 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-1.1 3.1-3.4 5.6-6.3 7.1l6.5 5.4C39.5 37.2 44 31.5 44 24c0-1.3-.1-2.7-.4-3.5z"/></svg>
     使用 Google 帳號登入
@@ -250,12 +468,26 @@
   <div id="login-error"></div>
 </div>
 
-<!-- 主應用 -->
+<!-- App -->
 <div id="app">
+
+  <!-- Top Bar -->
   <header class="topbar">
     <div class="topbar-left">
       <span class="eyebrow">JOURNAL</span>
       <h1>手帳</h1>
+    </div>
+    <div class="topbar-center">
+      <div class="view-switch">
+        <button id="btn-week-view" class="active">週計畫</button>
+        <button id="btn-month-view">月計畫</button>
+      </div>
+      <div class="nav-row">
+        <button class="nav-btn" id="nav-prev">‹</button>
+        <span class="period-label" id="period-label">—</span>
+        <button class="nav-btn" id="nav-next">›</button>
+        <button class="today-btn" id="nav-today">今天</button>
+      </div>
     </div>
     <div class="topbar-right">
       <img id="user-avatar" src="" alt="使用者">
@@ -263,46 +495,84 @@
     </div>
   </header>
 
-  <div class="view-switch">
-    <button id="btn-week-view" class="active">週計畫</button>
-    <button id="btn-month-view">月計畫</button>
-  </div>
+  <!-- Main Content -->
+  <div class="main-content">
 
-  <div class="nav-row">
-    <button id="nav-prev">‹</button>
-    <span class="period-label" id="period-label">—</span>
-    <button id="nav-next">›</button>
-    <button class="today-btn" id="nav-today">今天</button>
-  </div>
+    <!-- Left Panel -->
+    <aside class="left-panel">
 
-  <!-- 週檢視 -->
-  <div id="week-view"></div>
-
-  <!-- 月檢視 -->
-  <div id="month-view" style="display:none;">
-    <div class="month-grid" id="month-dow-row"></div>
-    <div class="month-grid" id="month-grid" style="margin-top:6px;"></div>
-  </div>
-
-  <!-- 日期詳情卡 -->
-  <div id="day-detail">
-    <div class="detail-card">
-      <button class="close-detail" id="close-detail-btn">×</button>
-      <div class="detail-head">
-        <div><span class="detail-date" id="detail-date-label"></span><span class="detail-sub" id="detail-dow-label"></span></div>
+      <!-- Month Goal -->
+      <div class="panel-section month-goal-section">
+        <div class="month-goal-header section-title">
+          <span class="dot-marker"></span>
+          <span id="goal-month-label">本月目標</span>
+        </div>
+        <textarea id="month-goal-input" placeholder="寫下這個月最重要的核心目標 ···" rows="3"></textarea>
+        <div class="goal-save-hint" id="goal-save-hint"></div>
       </div>
 
-      <div class="task-list" id="task-list"></div>
-      <div class="add-task-row">
-        <input type="text" id="new-task-input" placeholder="新增待辦事項，按 Enter 送出">
-        <button id="add-task-btn">新增</button>
+      <!-- Week Task Pool -->
+      <div class="panel-section week-pool-section">
+        <div class="section-title">
+          <span class="dot-marker" style="background:var(--tag-blue)"></span>
+          <span>本週計畫</span>
+        </div>
+        <div class="section-inner">
+          <div id="week-pool-list"></div>
+        </div>
+        <div class="add-pool-row" style="margin-top:10px;">
+          <input type="text" id="pool-input" placeholder="新增本週任務 ···">
+          <div class="tag-row">
+            <span>標籤：</span>
+            <div class="tag-picker" id="pool-tag-picker"></div>
+          </div>
+          <button class="btn-add-pool" id="btn-add-pool">新增到週計畫</button>
+        </div>
       </div>
 
-      <div class="diary-section" style="margin-top:22px;">
-        <label>今日小日記</label>
-        <textarea id="diary-textarea" placeholder="寫點什麼吧 ···"></textarea>
-        <div class="save-indicator" id="save-indicator"></div>
+    </aside>
+
+    <!-- Right: Week Board or Month View -->
+    <div class="week-board-wrapper">
+
+      <!-- Week Name Bar -->
+      <div class="week-name-bar" id="week-name-bar">
+        <div class="week-custom-label" id="week-custom-label">—</div>
+        <div class="week-default-range" id="week-range-label"></div>
+        <button class="edit-week-name-btn" id="edit-week-name-btn">✎ 命名</button>
       </div>
+
+      <!-- Week View Area -->
+      <div id="week-view-area">
+        <div class="days-columns" id="days-columns"></div>
+      </div>
+
+      <!-- Month View Area -->
+      <div id="month-view-area">
+        <div class="month-goal-display" id="month-goal-display">
+          <div class="label">本月目標</div>
+          <div class="goal-text empty" id="month-goal-display-text">尚未設定月目標</div>
+        </div>
+        <div class="month-grid-wrap">
+          <div class="month-dow-row" id="month-dow-row"></div>
+          <div class="month-grid" id="month-grid" style="margin-top:4px;"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Assign Dropdown (created dynamically) -->
+
+<!-- Week Name Modal -->
+<div class="modal-overlay" id="week-name-modal" style="display:none;">
+  <div class="modal-box">
+    <h3>自訂本週名稱</h3>
+    <input type="text" id="week-name-input" placeholder="例如：開學週、衝刺期 ···" maxlength="20">
+    <div class="modal-actions">
+      <button class="btn-cancel" id="week-name-cancel">取消</button>
+      <button class="btn-confirm" id="week-name-confirm">儲存</button>
     </div>
   </div>
 </div>
@@ -329,402 +599,680 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
-const db = firebase.firestore();
+const db   = firebase.firestore();
 
 /* ============================================================
-   全域狀態
+   Color Tag Config（莫蘭迪大地色）
    ============================================================ */
-let currentUser = null;
-let currentView = 'week';        // 'week' | 'month'
-let anchorDate = new Date();      // 目前週/月檢視所基準的日期
-let selectedDateStr = null;       // 詳情卡目前開啟的日期 'YYYY-MM-DD'
-let daysData = {};                // { 'YYYY-MM-DD': { tasks:[{id,text,done}], diary:'' } }
-let unsubscribeSnapshot = null;
-let diarySaveTimer = null;
-
-const WEEKDAY_LABELS = ['一','二','三','四','五','六','日'];
-const WEEKDAY_LABELS_SHORT = ['週一','週二','週三','週四','週五','週六','週日'];
+const TAGS = [
+  { id: 'red',    label: '煙燻紅',   color: '#C4806A' },
+  { id: 'green',  label: '鼠尾草綠', color: '#7A9E8E' },
+  { id: 'blue',   label: '迷霧藍',   color: '#7A96AD' },
+  { id: 'yellow', label: '芥末黃',   color: '#C4A96A' },
+  { id: 'purple', label: '薰衣草紫', color: '#9E8EAD' },
+  { id: 'stone',  label: '燧石灰',   color: '#9E9180' },
+];
+function tagColor(tagId) {
+  const t = TAGS.find(t => t.id === tagId);
+  return t ? t.color : 'var(--line)';
+}
 
 /* ============================================================
-   日期工具（週一為一週起始）
+   Global State
    ============================================================ */
-function pad2(n){ return String(n).padStart(2,'0'); }
+let currentUser      = null;
+let currentView      = 'week';   // 'week' | 'month'
+let anchorDate       = new Date();
 
-function toDateStr(d){
-  return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
-}
+// Firestore data cache
+let daysData         = {};  // { 'YYYY-MM-DD': { tasks:[...], diary:'' } }
+let weeklyData       = {};  // { 'YYYY-WW': { name:'', pool:[{id,text,done,tag,assignedDays:[]}] } }
+let monthlyGoals     = {};  // { 'YYYY-MM': { goal:'' } }
 
-function fromDateStr(s){
-  const [y,m,d] = s.split('-').map(Number);
-  return new Date(y, m-1, d);
-}
+let unsubDays        = null;
+let unsubWeekly      = null;
+let unsubMonthly     = null;
 
-function isSameDay(a,b){
-  return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
-}
+// UI state
+let selectedPoolTag  = null;
+let activeDropdown   = null;
+let goalSaveTimer    = null;
 
-// 取得該日期所在那一週的週一
-function getMondayOfWeek(d){
+const WEEKDAY_LABELS       = ['一','二','三','四','五','六','日'];
+const WEEKDAY_LABELS_FULL  = ['週一','週二','週三','週四','週五','週六','週日'];
+
+/* ============================================================
+   Date Utilities
+   ============================================================ */
+function pad2(n) { return String(n).padStart(2,'0'); }
+function toDateStr(d) { return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
+function fromDateStr(s) { const [y,m,d] = s.split('-').map(Number); return new Date(y,m-1,d); }
+function isSameDay(a,b) { return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
+
+function getMondayOfWeek(d) {
   const date = new Date(d);
-  const dow = date.getDay(); // 0=週日 ... 6=週六
-  const diff = (dow === 0 ? -6 : 1 - dow); // 轉換成週一為起點
-  date.setDate(date.getDate() + diff);
+  const dow  = date.getDay();
+  date.setDate(date.getDate() + (dow===0 ? -6 : 1-dow));
   date.setHours(0,0,0,0);
   return date;
 }
+function addDays(d,n) { const r=new Date(d); r.setDate(r.getDate()+n); return r; }
+function addMonths(d,n) { const r=new Date(d); r.setMonth(r.getMonth()+n); return r; }
 
-function addDays(d, n){
-  const date = new Date(d);
-  date.setDate(date.getDate() + n);
-  return date;
+function toWeekKey(d) {
+  const mon = getMondayOfWeek(d);
+  return `${mon.getFullYear()}-${pad2(mon.getMonth()+1)}-${pad2(mon.getDate())}`;
 }
-
-function addMonths(d, n){
-  const date = new Date(d);
-  date.setMonth(date.getMonth() + n);
-  return date;
-}
+function toMonthKey(d) { return `${d.getFullYear()}-${pad2(d.getMonth()+1)}`; }
+function genId() { return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
 
 /* ============================================================
    Firebase Auth
    ============================================================ */
 const googleProvider = new firebase.auth.GoogleAuthProvider();
-
 document.getElementById('google-login-btn').addEventListener('click', () => {
   document.getElementById('login-error').textContent = '';
   auth.signInWithPopup(googleProvider).catch(err => {
-    console.error(err);
     document.getElementById('login-error').textContent = '登入失敗，請再試一次。';
   });
 });
-
-document.getElementById('logout-btn').addEventListener('click', () => {
-  auth.signOut();
-});
+document.getElementById('logout-btn').addEventListener('click', () => auth.signOut());
 
 auth.onAuthStateChanged(user => {
   document.getElementById('loading-screen').style.display = 'none';
   if (user) {
     currentUser = user;
-    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('login-screen').classList.remove('visible');
     document.getElementById('app').classList.add('visible');
     document.getElementById('user-avatar').src = user.photoURL || '';
-    attachFirestoreListener();
+    attachListeners();
     renderCurrentView();
+    buildTagPicker();
   } else {
     currentUser = null;
-    if (unsubscribeSnapshot) { unsubscribeSnapshot(); unsubscribeSnapshot = null; }
-    daysData = {};
-    document.getElementById('login-screen').style.display = 'flex';
+    detachListeners();
+    daysData = {}; weeklyData = {}; monthlyGoals = {};
+    document.getElementById('login-screen').classList.add('visible');
     document.getElementById('app').classList.remove('visible');
-    document.getElementById('day-detail').classList.remove('visible');
   }
 });
 
 /* ============================================================
-   Firestore 結構：
-   users/{uid}/days/{YYYY-MM-DD}  →  { tasks: [{id,text,done}], diary: "" }
-   使用 onSnapshot 即時監聽整個 days collection，
-   讓多裝置打勾/寫日記能立刻同步。
+   Firestore Listeners
    ============================================================ */
-function attachFirestoreListener() {
-  if (unsubscribeSnapshot) unsubscribeSnapshot();
-  const daysRef = db.collection('users').doc(currentUser.uid).collection('days');
-  unsubscribeSnapshot = daysRef.onSnapshot(snapshot => {
-    snapshot.docChanges().forEach(change => {
-      const dateStr = change.doc.id;
-      if (change.type === 'removed') {
-        delete daysData[dateStr];
-      } else {
-        daysData[dateStr] = change.doc.data();
-      }
-    });
-    renderCurrentView();
-    if (selectedDateStr) renderDayDetail(selectedDateStr);
-  }, err => {
-    console.error('Firestore 監聽錯誤:', err);
-  });
+function attachListeners() {
+  detachListeners();
+  const uid = currentUser.uid;
+
+  // Days collection
+  unsubDays = db.collection('users').doc(uid).collection('days')
+    .onSnapshot(snap => {
+      snap.docChanges().forEach(ch => {
+        if (ch.type==='removed') delete daysData[ch.doc.id];
+        else daysData[ch.doc.id] = ch.doc.data();
+      });
+      renderCurrentView();
+    }, err => console.error('days listener:', err));
+
+  // Weekly collection
+  unsubWeekly = db.collection('users').doc(uid).collection('weekly')
+    .onSnapshot(snap => {
+      snap.docChanges().forEach(ch => {
+        if (ch.type==='removed') delete weeklyData[ch.doc.id];
+        else weeklyData[ch.doc.id] = ch.doc.data();
+      });
+      renderCurrentView();
+    }, err => console.error('weekly listener:', err));
+
+  // Monthly goals
+  unsubMonthly = db.collection('users').doc(uid).collection('monthly')
+    .onSnapshot(snap => {
+      snap.docChanges().forEach(ch => {
+        if (ch.type==='removed') delete monthlyGoals[ch.doc.id];
+        else monthlyGoals[ch.doc.id] = ch.doc.data();
+      });
+      renderGoalPanel();
+      syncMonthGoalDisplay();
+    }, err => console.error('monthly listener:', err));
 }
 
-function getDayDoc(dateStr) {
-  return db.collection('users').doc(currentUser.uid).collection('days').doc(dateStr);
-}
-
-function getDayData(dateStr) {
-  return daysData[dateStr] || { tasks: [], diary: '' };
-}
-
-async function ensureDayDoc(dateStr) {
-  if (!daysData[dateStr]) {
-    daysData[dateStr] = { tasks: [], diary: '' };
-  }
-}
-
-/* 新增待辦事項 */
-async function addTask(dateStr, text) {
-  const trimmed = text.trim();
-  if (!trimmed) return;
-  await ensureDayDoc(dateStr);
-  const newTask = { id: Date.now().toString(36) + Math.random().toString(36).slice(2,7), text: trimmed, done: false };
-  const current = getDayData(dateStr);
-  const tasks = [...(current.tasks || []), newTask];
-  await getDayDoc(dateStr).set({ tasks, diary: current.diary || '' }, { merge: true });
-}
-
-/* 切換打勾狀態 */
-async function toggleTask(dateStr, taskId) {
-  const current = getDayData(dateStr);
-  const tasks = (current.tasks || []).map(t => t.id === taskId ? { ...t, done: !t.done } : t);
-  await getDayDoc(dateStr).set({ tasks }, { merge: true });
-}
-
-/* 刪除待辦事項 */
-async function deleteTask(dateStr, taskId) {
-  const current = getDayData(dateStr);
-  const tasks = (current.tasks || []).filter(t => t.id !== taskId);
-  await getDayDoc(dateStr).set({ tasks }, { merge: true });
-}
-
-/* 儲存日記（debounce 自動儲存） */
-function scheduleDiarySave(dateStr, text) {
-  clearTimeout(diarySaveTimer);
-  const indicator = document.getElementById('save-indicator');
-  indicator.textContent = '正在輸入 ···';
-  diarySaveTimer = setTimeout(async () => {
-    await ensureDayDoc(dateStr);
-    const current = getDayData(dateStr);
-    await getDayDoc(dateStr).set({ diary: text, tasks: current.tasks || [] }, { merge: true });
-    indicator.textContent = '已自動儲存 ✓';
-    setTimeout(() => { if (indicator.textContent === '已自動儲存 ✓') indicator.textContent=''; }, 2000);
-  }, 700);
+function detachListeners() {
+  if (unsubDays)    { unsubDays();    unsubDays    = null; }
+  if (unsubWeekly)  { unsubWeekly();  unsubWeekly  = null; }
+  if (unsubMonthly) { unsubMonthly(); unsubMonthly = null; }
 }
 
 /* ============================================================
-   視圖切換
+   Firestore Helpers
+   ============================================================ */
+function userRef()       { return db.collection('users').doc(currentUser.uid); }
+function dayDoc(ds)      { return userRef().collection('days').doc(ds); }
+function weekDoc(wk)     { return userRef().collection('weekly').doc(wk); }
+function monthDoc(mk)    { return userRef().collection('monthly').doc(mk); }
+function getDayData(ds)  { return daysData[ds]  || { tasks:[], diary:'' }; }
+function getWeekData(wk) { return weeklyData[wk] || { name:'', pool:[] }; }
+function getMonthData(mk){ return monthlyGoals[mk] || { goal:'' }; }
+
+/* ============================================================
+   View Switching
    ============================================================ */
 document.getElementById('btn-week-view').addEventListener('click', () => switchView('week'));
 document.getElementById('btn-month-view').addEventListener('click', () => switchView('month'));
-
-function switchView(view) {
-  currentView = view;
-  document.getElementById('btn-week-view').classList.toggle('active', view === 'week');
-  document.getElementById('btn-month-view').classList.toggle('active', view === 'month');
-  document.getElementById('week-view').style.display = view === 'week' ? 'block' : 'none';
-  document.getElementById('month-view').style.display = view === 'month' ? 'block' : 'none';
-  renderCurrentView();
-}
-
 document.getElementById('nav-prev').addEventListener('click', () => {
-  anchorDate = currentView === 'week' ? addDays(anchorDate, -7) : addMonths(anchorDate, -1);
+  anchorDate = currentView==='week' ? addDays(anchorDate,-7) : addMonths(anchorDate,-1);
   renderCurrentView();
 });
 document.getElementById('nav-next').addEventListener('click', () => {
-  anchorDate = currentView === 'week' ? addDays(anchorDate, 7) : addMonths(anchorDate, 1);
+  anchorDate = currentView==='week' ? addDays(anchorDate,7) : addMonths(anchorDate,1);
   renderCurrentView();
 });
 document.getElementById('nav-today').addEventListener('click', () => {
-  anchorDate = new Date();
-  renderCurrentView();
+  anchorDate = new Date(); renderCurrentView();
 });
+
+function switchView(v) {
+  currentView = v;
+  document.getElementById('btn-week-view').classList.toggle('active', v==='week');
+  document.getElementById('btn-month-view').classList.toggle('active', v==='month');
+  document.getElementById('week-name-bar').style.display = v==='week' ? '' : 'none';
+  document.getElementById('week-view-area').classList.toggle('hidden', v!=='week');
+  document.getElementById('month-view-area').classList.toggle('visible', v==='month');
+  renderCurrentView();
+}
 
 function renderCurrentView() {
   if (!currentUser) return;
-  if (currentView === 'week') renderWeekView();
-  else renderMonthView();
+  if (currentView==='week') {
+    renderWeekView();
+    renderGoalPanel();
+    renderWeekPool();
+  } else {
+    renderMonthView();
+    renderGoalPanel();
+    syncMonthGoalDisplay();
+  }
 }
 
 /* ============================================================
-   週檢視
+   Month Goal Panel
+   ============================================================ */
+function renderGoalPanel() {
+  const mk = toMonthKey(anchorDate);
+  const goal = getMonthData(mk).goal || '';
+  const d = anchorDate;
+  document.getElementById('goal-month-label').textContent = `${d.getFullYear()} 年 ${d.getMonth()+1} 月大目標`;
+  const ta = document.getElementById('month-goal-input');
+  if (document.activeElement !== ta) ta.value = goal;
+}
+
+function syncMonthGoalDisplay() {
+  const mk = toMonthKey(anchorDate);
+  const goal = getMonthData(mk).goal || '';
+  const el = document.getElementById('month-goal-display-text');
+  if (goal.trim()) {
+    el.textContent = goal;
+    el.classList.remove('empty');
+  } else {
+    el.textContent = '尚未設定月目標';
+    el.classList.add('empty');
+  }
+}
+
+document.getElementById('month-goal-input').addEventListener('input', e => {
+  clearTimeout(goalSaveTimer);
+  const hint = document.getElementById('goal-save-hint');
+  hint.textContent = '正在輸入 ···';
+  goalSaveTimer = setTimeout(async () => {
+    const mk = toMonthKey(anchorDate);
+    await monthDoc(mk).set({ goal: e.target.value }, { merge: true });
+    hint.textContent = '已自動儲存 ✓';
+    setTimeout(() => { hint.textContent=''; }, 2000);
+  }, 700);
+});
+
+/* ============================================================
+   Week Pool
+   ============================================================ */
+function currentWeekKey() { return toWeekKey(anchorDate); }
+
+function renderWeekPool() {
+  const wk = currentWeekKey();
+  const pool = getWeekData(wk).pool || [];
+  const list = document.getElementById('week-pool-list');
+  list.innerHTML = '';
+
+  if (pool.length === 0) {
+    list.innerHTML = '<div style="color:var(--muted);font-size:12px;font-style:italic;padding:4px 0;">這週的計畫還是空的</div>';
+    return;
+  }
+
+  pool.forEach(task => {
+    const div = document.createElement('div');
+    div.className = 'pool-task-item';
+
+    // tag dot
+    const dot = document.createElement('div');
+    dot.className = 'pool-tag-dot';
+    dot.style.background = tagColor(task.tag);
+    dot.title = task.tag ? (TAGS.find(t=>t.id===task.tag)||{label:''}).label : '';
+
+    // checkbox
+    const chk = document.createElement('div');
+    chk.className = 'pool-checkbox' + (task.done ? ' checked' : '');
+    chk.addEventListener('click', () => togglePoolTask(wk, task.id));
+
+    // text
+    const span = document.createElement('div');
+    span.className = 'pool-task-text' + (task.done ? ' done' : '');
+    span.textContent = task.text;
+
+    // assigned days hint
+    if (task.assignedDays && task.assignedDays.length > 0) {
+      const badge = document.createElement('span');
+      badge.className = 'pool-badge';
+      badge.textContent = task.assignedDays.map(ds => {
+        const d = fromDateStr(ds);
+        return WEEKDAY_LABELS[(d.getDay()+6)%7];
+      }).join('·');
+      span.appendChild(badge);
+    }
+
+    // assign btn
+    const assignBtn = document.createElement('button');
+    assignBtn.className = 'pool-assign-btn';
+    assignBtn.textContent = '指派';
+    assignBtn.addEventListener('click', (e) => showAssignDropdown(e, wk, task.id));
+
+    // del btn
+    const delBtn = document.createElement('button');
+    delBtn.className = 'pool-del-btn';
+    delBtn.textContent = '×';
+    delBtn.addEventListener('click', () => deletePoolTask(wk, task.id));
+
+    const actions = document.createElement('div');
+    actions.className = 'pool-task-actions';
+    actions.appendChild(assignBtn);
+    actions.appendChild(delBtn);
+
+    div.appendChild(dot);
+    div.appendChild(chk);
+    div.appendChild(span);
+    div.appendChild(actions);
+    list.appendChild(div);
+  });
+}
+
+function buildTagPicker() {
+  const picker = document.getElementById('pool-tag-picker');
+  picker.innerHTML = '';
+  // "no tag" option
+  const none = document.createElement('button');
+  none.className = 'tag-dot-btn' + (selectedPoolTag===null ? ' selected' : '');
+  none.style.background = 'var(--line)';
+  none.title = '無標籤';
+  none.addEventListener('click', () => { selectedPoolTag=null; buildTagPicker(); });
+  picker.appendChild(none);
+
+  TAGS.forEach(t => {
+    const btn = document.createElement('button');
+    btn.className = 'tag-dot-btn' + (selectedPoolTag===t.id ? ' selected' : '');
+    btn.style.background = t.color;
+    btn.title = t.label;
+    btn.addEventListener('click', () => { selectedPoolTag=t.id; buildTagPicker(); });
+    picker.appendChild(btn);
+  });
+}
+
+document.getElementById('btn-add-pool').addEventListener('click', addPoolTask);
+document.getElementById('pool-input').addEventListener('keydown', e => {
+  if (e.key==='Enter') addPoolTask();
+});
+
+async function addPoolTask() {
+  const input = document.getElementById('pool-input');
+  const text  = input.value.trim();
+  if (!text) return;
+  const wk   = currentWeekKey();
+  const data = getWeekData(wk);
+  const pool = [...(data.pool||[])];
+  pool.push({ id:genId(), text, done:false, tag:selectedPoolTag||null, assignedDays:[] });
+  await weekDoc(wk).set({ name:data.name||'', pool }, { merge:true });
+  input.value = '';
+  selectedPoolTag = null;
+  buildTagPicker();
+}
+
+async function togglePoolTask(wk, taskId) {
+  const data = getWeekData(wk);
+  const pool = (data.pool||[]).map(t => t.id===taskId ? {...t, done:!t.done} : t);
+  await weekDoc(wk).set({ pool }, { merge:true });
+}
+
+async function deletePoolTask(wk, taskId) {
+  const data = getWeekData(wk);
+  const task = (data.pool||[]).find(t=>t.id===taskId);
+  if (!task) return;
+  // also remove from assigned days
+  if (task.assignedDays && task.assignedDays.length>0) {
+    for (const ds of task.assignedDays) {
+      const dayData = getDayData(ds);
+      const tasks = (dayData.tasks||[]).filter(t=>t.poolId!==taskId);
+      await dayDoc(ds).set({tasks, diary:dayData.diary||''}, {merge:true});
+    }
+  }
+  const pool = (data.pool||[]).filter(t=>t.id!==taskId);
+  await weekDoc(wk).set({ pool }, { merge:true });
+}
+
+/* ============================================================
+   Assign Dropdown
+   ============================================================ */
+function showAssignDropdown(e, wk, taskId) {
+  closeDropdown();
+  const monday = getMondayOfWeek(fromDateStr(wk));
+  const data = getWeekData(wk);
+  const task = (data.pool||[]).find(t=>t.id===taskId);
+  if (!task) return;
+
+  const dropdown = document.createElement('div');
+  dropdown.className = 'assign-dropdown';
+  dropdown.id = 'assign-dropdown';
+
+  WEEKDAY_LABELS_FULL.forEach((label, i) => {
+    const day = addDays(monday, i);
+    const ds  = toDateStr(day);
+    const isAssigned = (task.assignedDays||[]).includes(ds);
+    const btn = document.createElement('button');
+    btn.textContent = (isAssigned ? '✓ ' : '') + label + ` (${pad2(day.getMonth()+1)}/${pad2(day.getDate())})`;
+    if (isAssigned) btn.style.color = 'var(--accent)';
+    btn.addEventListener('click', () => {
+      toggleAssign(wk, taskId, ds, isAssigned);
+      closeDropdown();
+    });
+    dropdown.appendChild(btn);
+  });
+
+  // position near the button
+  const rect = e.currentTarget.getBoundingClientRect();
+  dropdown.style.top  = (rect.bottom + window.scrollY + 4) + 'px';
+  dropdown.style.left = Math.min(rect.left + window.scrollX, window.innerWidth-160) + 'px';
+  document.body.appendChild(dropdown);
+  activeDropdown = dropdown;
+
+  setTimeout(() => document.addEventListener('click', closeDropdown, {once:true}), 50);
+}
+
+function closeDropdown() {
+  if (activeDropdown) { activeDropdown.remove(); activeDropdown=null; }
+}
+
+async function toggleAssign(wk, taskId, ds, wasAssigned) {
+  const data = getWeekData(wk);
+  let pool = data.pool || [];
+  const taskIdx = pool.findIndex(t=>t.id===taskId);
+  if (taskIdx<0) return;
+  const task = {...pool[taskIdx]};
+  let assignedDays = [...(task.assignedDays||[])];
+
+  if (wasAssigned) {
+    // remove from day
+    assignedDays = assignedDays.filter(d=>d!==ds);
+    const dayData = getDayData(ds);
+    const tasks = (dayData.tasks||[]).filter(t=>t.poolId!==taskId);
+    await dayDoc(ds).set({tasks, diary:dayData.diary||''},{merge:true});
+  } else {
+    // add to day
+    assignedDays.push(ds);
+    const dayData = getDayData(ds);
+    const alreadyThere = (dayData.tasks||[]).some(t=>t.poolId===taskId);
+    if (!alreadyThere) {
+      const tasks = [...(dayData.tasks||[]),
+        { id:genId(), text:task.text, done:false, tag:task.tag||null, poolId:taskId, fromPool:true }
+      ];
+      await dayDoc(ds).set({tasks, diary:dayData.diary||''},{merge:true});
+    }
+  }
+
+  task.assignedDays = assignedDays;
+  pool[taskIdx] = task;
+  await weekDoc(wk).set({ name:data.name||'', pool },{merge:true});
+}
+
+/* ============================================================
+   Week Name
+   ============================================================ */
+document.getElementById('edit-week-name-btn').addEventListener('click', () => {
+  const wk = currentWeekKey();
+  const name = getWeekData(wk).name || '';
+  document.getElementById('week-name-input').value = name;
+  document.getElementById('week-name-modal').style.display = 'flex';
+  document.getElementById('week-name-input').focus();
+});
+document.getElementById('week-name-cancel').addEventListener('click', () => {
+  document.getElementById('week-name-modal').style.display = 'none';
+});
+document.getElementById('week-name-confirm').addEventListener('click', async () => {
+  const name = document.getElementById('week-name-input').value.trim();
+  const wk   = currentWeekKey();
+  const data = getWeekData(wk);
+  await weekDoc(wk).set({ name, pool: data.pool||[] }, { merge:true });
+  document.getElementById('week-name-modal').style.display = 'none';
+});
+document.getElementById('week-name-input').addEventListener('keydown', e => {
+  if (e.key==='Enter') document.getElementById('week-name-confirm').click();
+});
+
+/* ============================================================
+   Week View Render
    ============================================================ */
 function renderWeekView() {
   const monday = getMondayOfWeek(anchorDate);
   const sunday = addDays(monday, 6);
+  const wk     = toWeekKey(anchorDate);
+  const weekName = getWeekData(wk).name;
+
+  // Update period label
   document.getElementById('period-label').textContent =
     `${monday.getFullYear()}/${pad2(monday.getMonth()+1)}/${pad2(monday.getDate())} – ${pad2(sunday.getMonth()+1)}/${pad2(sunday.getDate())}`;
 
-  const container = document.getElementById('week-view');
-  container.innerHTML = '';
+  // Week name bar
+  document.getElementById('week-custom-label').textContent = weekName || `第 ${getWeekNumber(monday)} 週`;
+  document.getElementById('week-range-label').textContent =
+    `${pad2(monday.getMonth()+1)}/${pad2(monday.getDate())} – ${pad2(sunday.getMonth()+1)}/${pad2(sunday.getDate())}`;
+
   const today = new Date();
+  const container = document.getElementById('days-columns');
+  container.innerHTML = '';
 
-  for (let i = 0; i < 7; i++) {
-    const d = addDays(monday, i);
-    const dateStr = toDateStr(d);
-    const data = getDayData(dateStr);
+  for (let i=0; i<7; i++) {
+    const d    = addDays(monday, i);
+    const ds   = toDateStr(d);
+    const data = getDayData(ds);
     const tasks = data.tasks || [];
+    const isToday = isSameDay(d, today);
 
-    const row = document.createElement('div');
-    row.className = 'day-row' + (isSameDay(d, today) ? ' is-today' : '');
-    row.dataset.date = dateStr;
+    const col = document.createElement('div');
+    col.className = 'day-col' + (isToday ? ' is-today' : '');
 
-    const badge = document.createElement('div');
-    badge.className = 'day-date-badge';
-    badge.innerHTML = `<span class="dow">${WEEKDAY_LABELS_SHORT[i]}</span><span class="num">${d.getDate()}</span>`;
+    // Header
+    const header = document.createElement('div');
+    header.className = 'day-col-header';
+    header.innerHTML = `
+      <div class="dow-label">${WEEKDAY_LABELS[i]}</div>
+      <div class="date-num"><span class="date-num-inner">${d.getDate()}</span></div>
+      <div class="month-label">${d.getMonth()+1} 月</div>
+    `;
+    col.appendChild(header);
 
-    const summary = document.createElement('div');
-    summary.className = 'day-summary';
-    if (tasks.length === 0) {
-      summary.innerHTML = `<div class="empty-hint">沒有待辦事項</div>`;
+    // Task list
+    const taskList = document.createElement('div');
+    taskList.className = 'day-tasks';
+
+    if (tasks.length===0) {
+      const empty = document.createElement('div');
+      empty.style.cssText = 'color:var(--muted);font-size:11.5px;font-style:italic;padding:4px 0;';
+      empty.textContent = '空白';
+      taskList.appendChild(empty);
     } else {
-      const visible = tasks.slice(0, 3);
-      visible.forEach(t => {
-        const line = document.createElement('div');
-        line.className = 'task-line' + (t.done ? ' done' : '');
-        line.innerHTML = `<span class="task-dot"></span><span>${escapeHtml(t.text)}</span>`;
-        summary.appendChild(line);
+      tasks.forEach(t => {
+        taskList.appendChild(buildDayTaskEl(ds, t));
       });
-      if (tasks.length > 3) {
-        const more = document.createElement('div');
-        more.className = 'more-hint';
-        more.textContent = `還有 ${tasks.length - 3} 項 ···`;
-        summary.appendChild(more);
-      }
     }
+    col.appendChild(taskList);
 
-    row.appendChild(badge);
-    row.appendChild(summary);
+    // Add row
+    const addRow = document.createElement('div');
+    addRow.className = 'day-add-row';
+    const inp = document.createElement('input');
+    inp.type = 'text';
+    inp.placeholder = '+ 新增';
+    const addBtn = document.createElement('button');
+    addBtn.textContent = '加';
+    addBtn.addEventListener('click', () => {
+      if (inp.value.trim()) { addDayTask(ds, inp.value); inp.value=''; }
+    });
+    inp.addEventListener('keydown', e => {
+      if (e.key==='Enter' && inp.value.trim()) { addDayTask(ds, inp.value); inp.value=''; }
+    });
+    addRow.appendChild(inp);
+    addRow.appendChild(addBtn);
+    col.appendChild(addRow);
 
-    if (data.diary && data.diary.trim()) {
-      const flag = document.createElement('div');
-      flag.className = 'diary-flag';
-      flag.title = '今日有日記';
-      row.appendChild(flag);
-    }
+    container.appendChild(col);
+  }
 
-    row.addEventListener('click', () => openDayDetail(dateStr));
-    container.appendChild(row);
+  // also refresh pool since assigned days might show badges
+  renderWeekPool();
+}
+
+function buildDayTaskEl(ds, t) {
+  const item = document.createElement('div');
+  item.className = 'day-task-item' + (t.fromPool ? ' from-pool' : '');
+
+  // tag dot
+  const dot = document.createElement('div');
+  dot.className = 'day-task-tag-dot';
+  dot.style.background = tagColor(t.tag);
+
+  // checkbox
+  const chk = document.createElement('div');
+  chk.className = 'day-task-check' + (t.done ? ' checked' : '');
+  chk.addEventListener('click', () => toggleDayTask(ds, t.id));
+
+  // label
+  const label = document.createElement('div');
+  label.className = 'day-task-label' + (t.done ? ' done' : '');
+  label.textContent = t.text;
+
+  // pool origin badge
+  if (t.fromPool) {
+    const pb = document.createElement('span');
+    pb.className = 'pool-badge';
+    pb.textContent = '週';
+    label.appendChild(pb);
+  }
+
+  // del
+  const del = document.createElement('button');
+  del.className = 'day-task-del';
+  del.textContent = '×';
+  del.addEventListener('click', () => deleteDayTask(ds, t.id, t.poolId));
+
+  item.appendChild(dot);
+  item.appendChild(chk);
+  item.appendChild(label);
+  item.appendChild(del);
+  return item;
+}
+
+function getWeekNumber(monday) {
+  const start = new Date(monday.getFullYear(), 0, 1);
+  return Math.ceil(((monday - start) / 86400000 + 1) / 7);
+}
+
+/* ============================================================
+   Day Task Operations
+   ============================================================ */
+async function addDayTask(ds, text) {
+  const trimmed = text.trim();
+  if (!trimmed) return;
+  const data  = getDayData(ds);
+  const tasks = [...(data.tasks||[]), { id:genId(), text:trimmed, done:false, tag:null }];
+  await dayDoc(ds).set({ tasks, diary:data.diary||'' }, { merge:true });
+}
+
+async function toggleDayTask(ds, taskId) {
+  const data  = getDayData(ds);
+  const tasks = (data.tasks||[]).map(t => t.id===taskId ? {...t,done:!t.done} : t);
+  await dayDoc(ds).set({ tasks }, { merge:true });
+}
+
+async function deleteDayTask(ds, taskId, poolId) {
+  const data  = getDayData(ds);
+  const tasks = (data.tasks||[]).filter(t=>t.id!==taskId);
+  await dayDoc(ds).set({ tasks, diary:data.diary||'' }, { merge:true });
+  // if from pool, also remove ds from pool's assignedDays
+  if (poolId) {
+    const wk   = toWeekKey(fromDateStr(ds));
+    const wData = getWeekData(wk);
+    const pool  = (wData.pool||[]).map(t => {
+      if (t.id!==poolId) return t;
+      return {...t, assignedDays:(t.assignedDays||[]).filter(d=>d!==ds)};
+    });
+    await weekDoc(wk).set({ pool }, { merge:true });
   }
 }
 
 /* ============================================================
-   月檢視
+   Month View
    ============================================================ */
 function renderMonthView() {
-  const year = anchorDate.getFullYear();
+  const year  = anchorDate.getFullYear();
   const month = anchorDate.getMonth();
   document.getElementById('period-label').textContent = `${year} 年 ${month+1} 月`;
 
   const dowRow = document.getElementById('month-dow-row');
-  dowRow.innerHTML = WEEKDAY_LABELS.map(l => `<div class="month-dow">${l}</div>`).join('');
+  dowRow.innerHTML = WEEKDAY_LABELS.map(l=>`<div class="month-dow">${l}</div>`).join('');
 
   const grid = document.getElementById('month-grid');
   grid.innerHTML = '';
 
   const firstOfMonth = new Date(year, month, 1);
-  const startDate = getMondayOfWeek(firstOfMonth);
-  const lastOfMonth = new Date(year, month + 1, 0);
-  const endDate = getMondayOfWeek(lastOfMonth);
-  const totalCells = Math.round((addDays(endDate,6) - startDate) / 86400000) + 1;
+  const startDate    = getMondayOfWeek(firstOfMonth);
+  const lastOfMonth  = new Date(year, month+1, 0);
+  const endDate      = getMondayOfWeek(lastOfMonth);
+  const total        = Math.round((addDays(endDate,6)-startDate)/86400000)+1;
+  const today        = new Date();
 
-  const today = new Date();
-
-  for (let i = 0; i < totalCells; i++) {
-    const d = addDays(startDate, i);
-    const dateStr = toDateStr(d);
-    const data = getDayData(dateStr);
-    const tasks = data.tasks || [];
-    const outside = d.getMonth() !== month;
+  for (let i=0; i<total; i++) {
+    const d       = addDays(startDate, i);
+    const ds      = toDateStr(d);
+    const data    = getDayData(ds);
+    const tasks   = data.tasks||[];
+    const outside = d.getMonth()!==month;
 
     const cell = document.createElement('div');
-    cell.className = 'month-cell' + (outside ? ' outside' : '') + (isSameDay(d, today) ? ' is-today' : '');
-    cell.dataset.date = dateStr;
+    cell.className = 'month-cell'+(outside?' outside':'')+(isSameDay(d,today)?' is-today':'');
 
-    let dotsHtml = '';
-    if (tasks.length > 0) {
-      dotsHtml = '<div class="cell-dots">' +
-        tasks.slice(0,6).map(t => `<span class="dot${t.done ? ' done' : ''}"></span>`).join('') +
-        '</div>';
-    }
-    const diaryMark = (data.diary && data.diary.trim()) ? '<div class="diary-mark" title="今日有日記"></div>' : '';
-
-    cell.innerHTML = `<span class="cell-num">${d.getDate()}</span>${diaryMark}${dotsHtml}`;
-    cell.addEventListener('click', () => openDayDetail(dateStr));
+    const dotsHtml = tasks.length>0
+      ? '<div class="cell-dots">'+tasks.slice(0,6).map(t=>
+          `<span class="cell-dot" style="background:${tagColor(t.tag)||'var(--accent)'}${t.done?';opacity:0.4':''}"></span>`
+        ).join('')+'</div>'
+      : '';
+    cell.innerHTML = `<span class="cell-num">${d.getDate()}</span>${dotsHtml}`;
     grid.appendChild(cell);
   }
+
+  syncMonthGoalDisplay();
 }
 
 /* ============================================================
-   日期詳情卡
+   Init
    ============================================================ */
-function openDayDetail(dateStr) {
-  selectedDateStr = dateStr;
-  renderDayDetail(dateStr);
-  document.getElementById('day-detail').classList.add('visible');
-  document.getElementById('day-detail').scrollIntoView({ behavior:'smooth', block:'nearest' });
-}
-
-document.getElementById('close-detail-btn').addEventListener('click', () => {
-  document.getElementById('day-detail').classList.remove('visible');
-  selectedDateStr = null;
+// Close dropdown when clicking outside
+document.addEventListener('click', e => {
+  if (activeDropdown && !activeDropdown.contains(e.target)) closeDropdown();
 });
-
-function renderDayDetail(dateStr) {
-  const d = fromDateStr(dateStr);
-  const dow = (d.getDay() + 6) % 7; // 轉換成 0=週一
-  document.getElementById('detail-date-label').textContent =
-    `${d.getFullYear()}/${pad2(d.getMonth()+1)}/${pad2(d.getDate())}`;
-  document.getElementById('detail-dow-label').textContent = WEEKDAY_LABELS_SHORT[dow];
-
-  const data = getDayData(dateStr);
-  const tasks = data.tasks || [];
-
-  const list = document.getElementById('task-list');
-  list.innerHTML = '';
-  if (tasks.length === 0) {
-    list.innerHTML = `<div class="empty-hint" style="padding:6px 0;">今天還沒有待辦事項</div>`;
-  } else {
-    tasks.forEach(t => {
-      const item = document.createElement('div');
-      item.className = 'task-item';
-      item.innerHTML = `
-        <div class="task-checkbox${t.done ? ' checked' : ''}" data-id="${t.id}"></div>
-        <div class="task-text${t.done ? ' done' : ''}">${escapeHtml(t.text)}</div>
-        <button class="task-del" data-id="${t.id}">×</button>
-      `;
-      item.querySelector('.task-checkbox').addEventListener('click', () => toggleTask(dateStr, t.id));
-      item.querySelector('.task-del').addEventListener('click', () => deleteTask(dateStr, t.id));
-      list.appendChild(item);
-    });
-  }
-
-  const textarea = document.getElementById('diary-textarea');
-  // 避免使用者正在輸入時被遠端同步覆寫游標位置
-  if (document.activeElement !== textarea) {
-    textarea.value = data.diary || '';
-  }
-  document.getElementById('save-indicator').textContent = '';
-}
-
-document.getElementById('add-task-btn').addEventListener('click', submitNewTask);
-document.getElementById('new-task-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') submitNewTask();
-});
-
-function submitNewTask() {
-  const input = document.getElementById('new-task-input');
-  if (!selectedDateStr || !input.value.trim()) return;
-  addTask(selectedDateStr, input.value);
-  input.value = '';
-}
-
-document.getElementById('diary-textarea').addEventListener('input', e => {
-  if (!selectedDateStr) return;
-  scheduleDiarySave(selectedDateStr, e.target.value);
-});
-
-function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
-
-/* ============================================================
-   Service Worker 註冊（PWA）
-   ============================================================ */
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(err => console.warn('SW 註冊失敗:', err));
-  });
-}
 </script>
 </body>
 </html>
