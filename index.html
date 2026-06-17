@@ -348,8 +348,11 @@
       </div>
 
       <div style="margin-top: 10px; margin-bottom: 16px; background: #FFF9F5; padding: 12px; border-radius: 10px; border: 1px solid #F5E6DA;">
-        <input type="text" id="special-day-input" placeholder="✨今日大事" style="width:100%; border:1px solid var(--line); border-radius:6px; padding:8px 10px; font-size:13.5px; outline:none; background:var(--card); box-sizing: border-box;">
-        <div class="save-indicator" id="special-day-indicator" style="text-align:right; font-size:11px; color:var(--muted); margin-top:2px;"></div>
+        <div style="display: flex; gap: 6px; margin-bottom: 10px;">
+          <input type="text" id="special-day-input" placeholder="✨今日大事" style="flex: 1; border:1px solid var(--line); border-radius:6px; padding:8px 10px; font-size:13.5px; outline:none; background:var(--card); box-sizing: border-box;">
+          <button id="add-special-day-btn" style="border: none; background: #C75D3D; color: #fff; border-radius: 6px; padding: 0 14px; font-size: 13px; cursor: pointer;">新增</button>
+        </div>
+        <div id="special-days-list" style="display: flex; flex-direction: column; gap: 5px;"></div>
       </div>
 
       <div style="font-size:12px; font-weight:700; margin-bottom:6px; color:var(--muted);"></div>
@@ -392,7 +395,6 @@
 /* ============================================================
    Firebase 配置區
    ============================================================ */
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyBXy28clA40B41r_iyEXzWtkH21k1MPnG0",
   authDomain: "daily-schedule-hahaha.firebaseapp.com",
@@ -400,6 +402,7 @@ const firebaseConfig = {
   storageBucket: "daily-schedule-hahaha.firebasestorage.app",
   messagingSenderId: "26149222039",
   appId: "1:26149222039:web:ec299f4513c589935f5bd2",
+  measurementId: "G-C6YBPTTRFY"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -741,6 +744,52 @@ async function deleteLedgerItem(itemId) {
 }
 
 /* ============================================================
+   ✨ 特殊日子多筆增刪邏輯
+   ============================================================ */
+async function addSpecialDayItem() {
+  if (!selectedDateStr) return;
+  const input = document.getElementById('special-day-input');
+  const text = input.value.trim();
+  if (!text) return;
+
+  const data = getDayData(selectedDateStr);
+  let specialDays = Array.isArray(data.specialDays) ? data.specialDays : [];
+  
+  // 舊資料相容處理
+  if (data.specialDay && specialDays.length === 0) {
+    specialDays.push({ id: 'sp_old', text: data.specialDay });
+  }
+
+  const newItem = {
+    id: 'sp_' + Date.now().toString(36) + Math.random().toString(36).slice(2,4),
+    text: text
+  };
+
+  specialDays.push(newItem);
+
+  await db.collection('users').doc(currentUser.uid).collection('days').doc(selectedDateStr).set({
+    specialDays: specialDays,
+    specialDay: firebase.firestore.FieldValue.delete()
+  }, { merge: true });
+
+  input.value = '';
+}
+
+async function deleteSpecialDayItem(itemId) {
+  if (!selectedDateStr) return;
+  const data = getDayData(selectedDateStr);
+  if (!data.specialDays) return;
+
+  const updated = data.specialDays.filter(item => item.id !== itemId);
+  await db.collection('users').doc(currentUser.uid).collection('days').doc(selectedDateStr).set({
+    specialDays: updated
+  }, { merge: true });
+}
+
+document.getElementById('add-special-day-btn').addEventListener('click', addSpecialDayItem);
+document.getElementById('special-day-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') addSpecialDayItem(); });
+
+/* ============================================================
    介面渲染群
    ============================================================ */
 function renderPoolUI() {
@@ -835,9 +884,18 @@ function renderWeekKanbanView() {
     const col = document.createElement('div'); col.className = 'kanban-col' + (isSameDay(d, today) ? ' is-today' : '');
     const header = document.createElement('div'); header.className = 'kanban-header';
 
+    // 週看板：支援多筆特殊日子標籤顯示
     let specialDayBadgeHtml = '';
-    if (data.specialDay) {
-      specialDayBadgeHtml = `<div style="font-size:11px; background:#EADDD6; color:#C75D3D; padding:2px 6px; border-radius:4px; margin-top:4px; font-weight:bold; display:inline-block;">✨ ${escapeHtml(data.specialDay)}</div>`;
+    let weekSpDays = [];
+    if (Array.isArray(data.specialDays)) weekSpDays = data.specialDays;
+    else if (data.specialDay) weekSpDays = [{ text: data.specialDay }];
+
+    if (weekSpDays.length > 0) {
+      specialDayBadgeHtml = `<div style="display:flex; flex-direction:column; gap:2px; margin-top:4px;">`;
+      weekSpDays.forEach(sp => {
+        specialDayBadgeHtml += `<div style="font-size:10.5px; background:#EADDD6; color:#C75D3D; padding:1px 5px; border-radius:4px; font-weight:bold; display:inline-block; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">✨ ${escapeHtml(sp.text)}</div>`;
+      });
+      specialDayBadgeHtml += `</div>`;
     }
   
     header.innerHTML = `<span class="dow">${WEEKDAY_LABELS_SHORT[i]}</span><span class="num">${d.getDate()}</span>${specialDayBadgeHtml}`;
@@ -878,7 +936,7 @@ function renderWeekKanbanView() {
 }
 
 /* ============================================================
-   修正後的月檢視渲染函數
+   月檢視渲染函數
    ============================================================ */
 function renderMonthView() {
   const dowRow = document.getElementById('month-dow-row');
@@ -886,34 +944,28 @@ function renderMonthView() {
   
   if (!dowRow || !grid) return;
   
-  // 1. 渲染頂部星期標頭 (週一至週日)
   dowRow.innerHTML = WEEKDAY_LABELS_SHORT.map(label => `<div class="month-dow">${label}</div>`).join('');
   grid.innerHTML = '';
 
-  // 2. 使用全域的 anchorDate 當作當月基準
   const year = anchorDate.getFullYear();
   const month = anchorDate.getMonth();
   
-  // 設定導覽列標籤顯示年份與月份
   document.getElementById('period-label').textContent = `${year}年 ${pad2(month + 1)}月`;
 
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
 
-  // 計算週一到週日的對齊偏移
   let startOffset = firstDay.getDay() - 1;
   if (startOffset < 0) startOffset = 6; 
 
   const totalDays = lastDay.getDate();
 
-  // 3. 填補前面的空白格子
   for (let i = 0; i < startOffset; i++) {
     const empty = document.createElement('div');
     empty.className = 'month-day empty';
     grid.appendChild(empty);
   }
 
-  // 4. 渲染當月的每一天
   for (let day = 1; day <= totalDays; day++) {
     const d = new Date(year, month, day);
     const dateStr = toDateStr(d);
@@ -926,30 +978,37 @@ function renderMonthView() {
       dayDiv.classList.add('today-active');
     }
 
+    // 月檢視：支援多筆特殊日子標籤疊加顯示
     let specialDayHtml = '';
-    if (data && data.specialDay) {
-      specialDayHtml = `
-        <div style="
-          font-size: 10px; 
-          background: #FFF9F5; 
-          color: #C75D3D; 
-          padding: 2px 4px; 
-          border-radius: 4px; 
-          margin-top: 4px; 
-          font-weight: bold; 
-          text-overflow: ellipsis; 
-          overflow: hidden; 
-          white-space: nowrap;
-          border: 1px solid #F5E6DA;
-          width: 100%;
-          box-sizing: border-box;
-        " title="${escapeHtml(data.specialDay)}">
-          ✨ ${escapeHtml(data.specialDay)}
-        </div>
-      `;
+    let monthSpDays = [];
+    if (data && Array.isArray(data.specialDays)) monthSpDays = data.specialDays;
+    else if (data && data.specialDay) monthSpDays = [{ text: data.specialDay }];
+
+    if (monthSpDays.length > 0) {
+      specialDayHtml = `<div style="display:flex; flex-direction:column; gap:2px; margin-top:2px; width:100%; box-sizing:border-box; overflow:hidden;">`;
+      monthSpDays.forEach(sp => {
+        specialDayHtml += `
+          <div style="
+            font-size: 9.5px; 
+            background: #FFF9F5; 
+            color: #C75D3D; 
+            padding: 1px 3px; 
+            border-radius: 3px; 
+            font-weight: bold; 
+            text-overflow: ellipsis; 
+            overflow: hidden; 
+            white-space: nowrap;
+            border: 1px solid #F5E6DA;
+            width: 100%;
+            box-sizing: border-box;
+          " title="${escapeHtml(sp.text)}">
+            ✨ ${escapeHtml(sp.text)}
+          </div>
+        `;
+      });
+      specialDayHtml += `</div>`;
     }
 
-    // 計算今日花費摘要
     const ledger = data.ledger || [];
     let dayTotalSpend = ledger.reduce((sum, item) => sum + (item.amount || 0), 0);
     let spendHtml = dayTotalSpend > 0 ? `<div style="font-size:10px; color:var(--accent); font-weight:700; margin-top:auto; align-self:flex-end;">-$${dayTotalSpend}</div>` : '';
@@ -974,8 +1033,6 @@ function renderMonthView() {
 function openDayDetail(dateStr) { selectedDateStr = dateStr; renderDayDetail(dateStr); document.getElementById('day-detail').style.display = 'block'; document.getElementById('day-detail').scrollIntoView({ behavior:'smooth', block:'nearest' }); }
 document.getElementById('close-detail-btn').addEventListener('click', () => { document.getElementById('day-detail').style.display = 'none'; selectedDateStr = null; });
 
-let specialDayTimer = null;
-
 function renderDayDetail(dateStr) {
   const d = fromDateStr(dateStr);
   document.getElementById('detail-date-label').textContent = `${d.getFullYear()}/${pad2(d.getMonth()+1)}/${pad2(d.getDate())}`;
@@ -983,11 +1040,28 @@ function renderDayDetail(dateStr) {
 
   const data = getDayData(dateStr);
   
-  const specialInput = document.getElementById('special-day-input');
-  if (document.activeElement !== specialInput) {
-    specialInput.value = data.specialDay || '';
+  // 日詳情：渲染「多筆特殊日子」清單
+  const specialListEl = document.getElementById('special-days-list');
+  specialListEl.innerHTML = '';
+
+  let specialDays = [];
+  if (Array.isArray(data.specialDays)) {
+    specialDays = data.specialDays;
+  } else if (data.specialDay) {
+    specialDays = [{ id: 'sp_old', text: data.specialDay }];
   }
-  document.getElementById('special-day-indicator').textContent = '';
+
+  if (specialDays.length === 0) {
+    specialListEl.innerHTML = `<div style="font-size:11px; color:var(--muted); font-style:italic;">今天是一般的小日子。</div>`;
+  } else {
+    specialDays.forEach(item => {
+      const spDiv = document.createElement('div');
+      spDiv.style = "display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 4px 8px; border-radius: 4px; font-size: 12.5px; border: 1px solid #F5E6DA;";
+      spDiv.innerHTML = `<span style="color: #C75D3D; font-weight: 500;">✨ ${escapeHtml(item.text)}</span><button class="del-sp" style="border:none; background:transparent; color:var(--muted); cursor:pointer; font-size:14px;">×</button>`;
+      spDiv.querySelector('.del-sp').addEventListener('click', () => deleteSpecialDayItem(item.id));
+      specialListEl.appendChild(spDiv);
+    });
+  }
   
   const tasks = data.tasks || []; const list = document.getElementById('task-list'); list.innerHTML = '';
   if (tasks.length === 0) {
@@ -1053,17 +1127,6 @@ function scheduleDiarySave(dateStr, text) {
     indicator.textContent = '已儲存 ✓';
   }, 800);
 }
-
-document.getElementById('special-day-input').addEventListener('input', e => {
-  if (!selectedDateStr) return;
-  clearTimeout(specialDayTimer);
-  const indicator = document.getElementById('special-day-indicator');
-  indicator.textContent = '自動同步中···';
-  specialDayTimer = setTimeout(async () => {
-    await db.collection('users').doc(currentUser.uid).collection('days').doc(selectedDateStr).set({ specialDay: e.target.value.trim() }, { merge: true });
-    indicator.textContent = '已記錄 ✓';
-  }, 800);
-});
 
 document.getElementById('month-goal-input').addEventListener('input', (e) => {
   clearTimeout(monthGoalTimer); const mStr = toMonthStr(anchorDate); const indicator = document.getElementById('month-goal-indicator'); indicator.textContent = '同步中 ···';
