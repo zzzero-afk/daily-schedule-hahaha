@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0">
-<title>P人消滅計畫</title>
+<title>P人消滅計畫 v3 (任務與記帳手帳)</title>
 
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#FAF8F5">
@@ -29,14 +29,14 @@
     --radius:14px;
     --shadow:0 2px 10px rgba(43,40,37,0.05);
 
-    /* 莫蘭迪大地色系標籤庫 */
+    /* 莫蘭迪標籤庫 */
     --tag-none: #E8E3DA;
-    --tag-red: #B87D73;    /* 煙燻紅 */
-    --tag-green: #8A9A86;  /* 鼠尾草綠 */
-    --tag-blue: #7E8F9F;   /* 迷霧藍 */
-    --tag-yellow: #C2A675; /* 芥末黃 */
-    --tag-purple:  #9E8EAD;  /* 薰衣草紫 */
-    --tag-gray: #9FA09E;   /* 黏土灰 */
+    --tag-red: #B87D73;    
+    --tag-green: #8A9A86;  
+    --tag-blue: #7E8F9F;   
+    --tag-yellow: #C2A675; 
+    --tag-purple:  #9E8EAD;  
+    --tag-gray: #9FA09E;   
   }
 
   *{box-sizing:border-box;}
@@ -58,10 +58,7 @@
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     gap:28px; background:var(--bg); z-index:100; padding:24px; text-align:center;
   }
-  #login-screen .brand-mark{
-    font-family:'Noto Serif TC', serif;
-    font-size:15px; letter-spacing:0.4em; color:var(--muted);
-  }
+  #login-screen .brand-mark{ font-family:'Noto Serif TC', serif; font-size:15px; letter-spacing:0.4em; color:var(--muted); }
   #login-screen h1{font-size:32px; font-weight:700;}
   #login-screen p{color:var(--muted); font-size:14px; max-width:280px; line-height:1.7; margin:0;}
   .google-btn{
@@ -70,7 +67,6 @@
     padding:13px 26px; font-size:15px; font-weight:500; color:var(--ink);
     cursor:pointer; box-shadow:var(--shadow); transition:transform .15s ease, box-shadow .15s ease;
   }
-  .google-btn:hover{transform:translateY(-1px); box-shadow:0 4px 14px rgba(43,40,37,0.09);}
   .google-btn svg{width:18px; height:18px;}
   #login-error{color:var(--accent); font-size:13px; min-height:18px;}
 
@@ -80,276 +76,153 @@
 
   header.topbar{
     display:flex; align-items:center; justify-content:space-between;
-    padding:6px 2px 18px; gap:10px; border-bottom:1px solid var(--line);
-    margin-bottom:20px;
+    padding:6px 2px 18px; gap:10px; border-bottom:1px solid var(--line); margin-bottom:20px;
   }
   .topbar-left{display:flex; align-items:baseline; gap:10px;}
   .topbar-left .eyebrow{font-size:11px; letter-spacing:0.25em; color:var(--muted); font-weight:500;}
   .topbar-left h1{font-size:22px;}
   .topbar-right{display:flex; align-items:center; gap:10px;}
   #user-avatar{width:30px; height:30px; border-radius:50%; border:1px solid var(--line); cursor:pointer;}
-  #logout-btn{
-    border:none; background:none; color:var(--muted); font-size:12px; cursor:pointer;
-    text-decoration:underline; padding:4px;
-  }
+  #logout-btn{ border:none; background:none; color:var(--muted); font-size:12px; cursor:pointer; text-decoration:underline; padding:4px; }
 
   /* 控制列 */
-  .control-row {
-    display:flex; justify-content:space-between; align-items:center;
-    margin-bottom:20px; flex-wrap:wrap; gap:14px;
-  }
-
-  .view-switch{
-    display:flex; background:var(--card); border:1px solid var(--line); border-radius:999px;
-    padding:3px; gap:2px; width:fit-content;
-  }
-  .view-switch button{
-    border:none; background:none; padding:7px 18px; border-radius:999px; font-size:13px;
-    color:var(--muted); cursor:pointer; transition:all .15s ease; font-weight:500;
-  }
+  .control-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:14px; }
+  .view-switch{ display:flex; background:var(--card); border:1px solid var(--line); border-radius:999px; padding:3px; gap:2px; }
+  .view-switch button{ border:none; background:none; padding:7px 18px; border-radius:999px; font-size:13px; color:var(--muted); cursor:pointer; font-weight:500; }
   .view-switch button.active{background:var(--ink); color:var(--bg);}
 
-  .nav-row{display:flex; align-items:center; gap:10px; flex-wrap:nowrap;}
-  .nav-row button{
-    border:none; background:none; color:var(--muted); cursor:pointer;
-    width:30px; height:30px; border-radius:50%; font-size:16px;
-    display:flex; align-items:center; justify-content:center;
-  }
+  .nav-row{display:flex; align-items:center; gap:10px;}
+  .nav-row button{ border:none; background:none; color:var(--muted); cursor:pointer; width:30px; height:30px; border-radius:50%; font-size:16px; display:flex; align-items:center; justify-content:center; }
   .nav-row button:hover{background:var(--accent-soft); color:var(--accent);}
   .nav-row .period-label{font-size:16px; font-weight:500; min-width:130px; text-align:center; font-family:'Noto Serif TC',serif;}
-  .today-btn{
-    font-size:11px; color:var(--accent); border:1px solid var(--accent-soft); background:var(--accent-soft);
-    border-radius:999px; padding:3px 11px; cursor:pointer; white-space:nowrap;
-  }
+  .today-btn{ font-size:11px; color:var(--accent); border:1px solid var(--accent-soft); background:var(--accent-soft); border-radius:999px; padding:3px 11px; cursor:pointer; }
 
-  /* 自訂週標題編輯 */
-  .week-title-area {
-    display: flex; align-items: center; gap: 8px; background: var(--card);
-    border: 1px solid var(--line); padding: 4px 12px; border-radius: 8px;
-  }
+  .week-title-area { display: flex; align-items: center; gap: 8px; background: var(--card); border: 1px solid var(--line); padding: 4px 12px; border-radius: 8px; }
   .week-title-display { font-size: 13.5px; font-weight: 500; color: var(--ink); }
-  .week-title-input {
-    border: none; background: transparent; font-size: 13.5px; color: var(--ink);
-    outline: none; width: 140px; display: none;
-  }
-  .week-title-btn {
-    border: none; background: transparent; color: var(--muted); cursor: pointer;
-    font-size: 12px; padding: 2px;
-  }
-  .week-title-btn:hover { color: var(--accent); }
+  .week-title-input { border: none; background: transparent; font-size: 13.5px; color: var(--ink); outline: none; width: 140px; display: none; }
+  .week-title-btn { border: none; background: transparent; color: var(--muted); cursor: pointer; font-size: 12px; }
 
   /* ---------- 主版面雙欄架構 ---------- */
-  .workspace-layout {
-    display: grid; grid-template-columns: 300px 1fr; gap: 24px; align-items: start;
-  }
-
-  /* 左側：大目標與週池 */
-  .side-panel { display: flex; flex-direction: column; gap: 20px; }
-  .panel-card {
-    background: var(--card); border-radius: var(--radius); border: 1px solid var(--line);
-    box-shadow: var(--shadow); padding: 18px;
-  }
+  .workspace-layout { display: grid; grid-template-columns: 320px 1fr; gap: 24px; align-items: start; }
+  .side-panel { display: flex; flex-direction: column; gap: 16px; }
+  .panel-card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--line); box-shadow: var(--shadow); padding: 18px; }
   .panel-card h3 { font-size: 15px; margin-bottom: 12px; border-left: 3px solid var(--ink); padding-left: 8px; color: var(--ink); }
   
-  .month-goal-textarea {
-    width: 100%; min-height: 80px; border: 1px solid var(--line); border-radius: 8px;
-    padding: 10px; font-size: 13.5px; background: var(--bg); color: var(--ink);
-    resize: none; line-height: 1.5; outline: none;
-  }
-  .month-goal-textarea:focus { border-color: var(--muted); }
+  /* 頂部整合看板（分數 + 記帳統計） */
+  .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat-mini-box { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; box-shadow: var(--shadow); }
+  .stat-mini-box .title { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+  .stat-mini-box .num { font-size: 20px; font-weight: 700; font-family: 'Noto Serif TC', serif; }
+  
+  .score-box-dark { background: linear-gradient(135deg, #2B2825, #44403C); color: #fff; border: none; }
+  .score-box-dark .title { color: #C8C2B7; }
+  .score-box-dark .num.positive { color: #81C784; }
+  .score-box-dark .num.negative { color: #E57373; }
 
-  /* 色彩選取小點 */
+  .month-goal-textarea { width: 100%; min-height: 70px; border: 1px solid var(--line); border-radius: 8px; padding: 10px; font-size: 13.5px; background: var(--bg); color: var(--ink); resize: none; outline: none; }
+
+  /* 色彩標籤 */
   .color-picker { display: flex; gap: 6px; margin-bottom: 8px; align-items: center; flex-wrap: wrap; }
-  .color-dot {
-    width: 14px; height: 14px; border-radius: 50%; cursor: pointer;
-    border: 2px solid transparent; transition: transform 0.1s ease;
-  }
+  .color-dot { width: 14px; height: 14px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; }
   .color-dot.active { transform: scale(1.2); border-color: var(--ink); }
 
   .pool-input-area { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; background: var(--bg); padding: 8px; border-radius: 8px; border: 1px solid var(--line); }
   .pool-input-row { display: flex; gap: 6px; }
-  .pool-input-row input {
-    flex: 1; border: 1px solid var(--line); border-radius: 6px; padding: 7px 10px;
-    font-size: 13px; background: var(--card); color: var(--ink); outline: none;
-  }
-  .pool-input-row button {
-    border: none; background: var(--ink); color: var(--bg); padding: 0 12px;
-    font-size: 13px; border-radius: 6px; cursor: pointer;
-  }
-  .pool-input-row button:hover { background: var(--accent); }
-  .pool-note-input {
-    width: 100%; border: 1px solid var(--line); border-radius: 4px; padding: 4px 6px;
-    font-size: 11px; background: var(--card); color: var(--ink); outline: none;
-  }
+  .pool-input-row input { flex: 1; border: 1px solid var(--line); border-radius: 6px; padding: 7px 10px; font-size: 13px; background: var(--card); outline: none; }
+  .pool-input-row button { border: none; background: var(--ink); color: var(--bg); padding: 0 12px; font-size: 13px; border-radius: 6px; cursor: pointer; }
+  .pool-note-input { width: 100%; border: 1px solid var(--line); border-radius: 4px; padding: 4px 6px; font-size: 11px; outline: none; }
 
   .pool-list { display: flex; flex-direction: column; gap: 8px; }
-  .pool-item {
-    background: var(--card); padding: 10px; border-radius: 8px;
-    display: flex; flex-direction: column; gap: 6px; font-size: 13px;
-    border-left: 4px solid var(--tag-none); position: relative; border: 1px solid var(--line);
-  }
-  .pool-item-text { word-break: break-word; line-height: 1.4; padding-right: 20px; font-weight: 500; }
-  .pool-item-del {
-    position: absolute; right: 6px; top: 6px; border: none; background: transparent;
-    color: var(--muted); cursor: pointer; font-size: 14px; padding: 2px; opacity: 0.5;
-  }
+  .pool-item { background: var(--card); padding: 10px; border-radius: 8px; display: flex; flex-direction: column; gap: 6px; font-size: 13px; border: 1px solid var(--line); position: relative; }
+  .pool-item-text { word-break: break-word; font-weight: 500; line-height: 1.4; }
+  .pool-item-del { position: absolute; right: 6px; top: 6px; border: none; background: transparent; color: var(--muted); cursor: pointer; font-size: 14px; opacity: 0.5; }
   .pool-item:hover .pool-item-del { opacity: 1; }
 
-  /* 右側：週檢視看板 */
-  .week-view-container { display: flex; flex-direction: column; gap: 10px; }
-  .bubble-banner {
-    background: #EAF2F8; border: 1px dashed #7E8F9F; border-radius: 8px;
-    padding: 8px 12px; font-size: 12px; color: #2B2825; display: none;
-    align-items: center; gap: 8px; animation: bubbleFloat 2s ease-in-out infinite alternate;
-  }
-  @keyframes bubbleFloat {
-    0% { transform: translateY(0); }
-    100% { transform: translateY(-3px); }
-  }
+  /* 備註可直接編輯樣式 */
+  .editable-note-span { display: block; cursor: pointer; font-size: 11.5px; color: var(--muted); background: rgba(43,40,37,0.04); padding: 4px 6px; border-radius: 4px; margin-top: 4px; font-style: italic; border: 1px dashed transparent; }
+  .editable-note-span:hover { border-color: var(--muted); background: rgba(43,40,37,0.07); }
+  .note-edit-input { width: 100%; font-size: 11.5px; padding: 3px 5px; margin-top: 4px; border: 1px solid var(--accent); border-radius: 4px; outline: none; }
 
-  .week-kanban {
-    display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; align-items: start;
-  }
-  .kanban-col {
-    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
-    box-shadow: var(--shadow); min-height: 450px; display: flex; flex-direction: column;
-    padding: 12px 10px; transition: border-color 0.15s ease;
-  }
+  /* 右側：週看板檢視 */
+  .week-view-container { display: flex; flex-direction: column; gap: 10px; }
+  .bubble-banner { background: #FFF3CD; border: 1px dashed #E6AD12; border-radius: 8px; padding: 8px 12px; font-size: 12px; color: #664D03; display: none; }
+
+  .week-kanban { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; align-items: start; }
+  .kanban-col { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); min-height: 480px; display: flex; flex-direction: column; padding: 12px 8px; }
   .kanban-col.is-today { border: 1.5px solid var(--accent); background: #FAF9F6; }
   
-  .kanban-header {
-    text-align: center; border-bottom: 1px solid var(--line); padding-bottom: 8px;
-    margin-bottom: 10px; cursor: pointer;
-  }
-  .kanban-header .dow { font-size: 11px; color: var(--muted); display: block; margin-bottom: 2px; font-weight: 500; }
+  .kanban-header { text-align: center; border-bottom: 1px solid var(--line); padding-bottom: 8px; margin-bottom: 10px; cursor: pointer; }
+  .kanban-header .dow { font-size: 11px; color: var(--muted); display: block; font-weight: 500; }
   .kanban-header .num { font-size: 16px; font-weight: 700; font-family: 'Noto Serif TC', serif; }
-  .kanban-col.is-today .kanban-header .num {
-    color: var(--bg); background: var(--accent); border-radius: 50%;
-    width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center;
-  }
+  .kanban-col.is-today .kanban-header .num { color: var(--bg); background: var(--accent); border-radius: 50%; width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; }
 
-  .kanban-task-list { flex: 1; display: flex; flex-direction: column; gap: 6px; }
-  .kanban-task-item {
-    background: var(--bg); padding: 7px 8px; border-radius: 8px; font-size: 12.5px;
-    display: flex; gap: 6px; align-items: flex-start; border-left: 3px solid var(--tag-none);
-    cursor: pointer;
-  }
+  .kanban-task-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; cursor: pointer; }
+  .kanban-task-item { background: var(--bg); padding: 6px 8px; border-radius: 6px; font-size: 12.5px; display: flex; gap: 6px; align-items: flex-start; border-left: 3px solid var(--tag-none); }
   .kanban-task-item.done { opacity: 0.55; }
+  .kanban-task-item.postponed { opacity: 0.5; background: #ECEAE6; border-left-style: dashed; }
   .kanban-task-item .dot-indicator { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); margin-top: 6px; flex-shrink: 0; }
   .kanban-task-item.done .dot-indicator { background: var(--done); }
   .kanban-task-item .text-span { flex: 1; word-break: break-word; line-height: 1.35; }
   .kanban-task-item.done .text-span { text-decoration: line-through; color: var(--done); }
 
-  .kanban-diary-flag {
-    margin-top: auto; padding-top: 8px; font-size: 11px; color: var(--accent);
-    text-align: right; font-style: italic; opacity: 0.8;
-  }
+  /* 看板下方記帳與小總計區塊 */
+  .kanban-accounting-summary { margin-top: auto; border-top: 1px dashed var(--line); padding-top: 8px; display: flex; flex-direction: column; gap: 4px; font-size: 11px; cursor: pointer; }
+  .accounting-badge-list { display: flex; flex-wrap: wrap; gap: 3px; max-height: 38px; overflow: hidden; }
+  .accounting-badge { background: #ECEAE6; color: var(--ink); padding: 1px 4px; border-radius: 4px; font-size: 10px; }
+  .accounting-total-label { color: var(--accent); font-weight: 700; text-align: right; }
 
   /* ---------- 月檢視 ---------- */
   .month-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:6px;}
   .month-dow{text-align:center; font-size:11px; color:var(--muted); padding-bottom:6px;}
-  .month-cell{
-    aspect-ratio:1/1; border-radius:10px; border:1px solid var(--line); background:var(--card);
-    padding:6px 5px; cursor:pointer; display:flex; flex-direction:column; gap:3px;
-    transition:background .12s ease, border-color .12s ease; position:relative; overflow:hidden;
-  }
-  .month-cell:hover{border-color:var(--accent-soft);}
+  .month-cell{ aspect-ratio:1/1; border-radius:10px; border:1px solid var(--line); background:var(--card); padding:6px 5px; cursor:pointer; display:flex; flex-direction:column; gap:3px; position:relative; overflow:hidden; }
   .month-cell.outside{opacity:0.32;}
   .month-cell .cell-num{font-size:12.5px; font-weight:500; font-family:'Noto Serif TC',serif;}
   .month-cell.is-today{border-color:var(--accent); background:var(--accent-soft);}
-  .month-cell.is-today .cell-num{color:var(--accent); font-weight:700;}
   .month-cell .cell-dots{display:flex; gap:2px; flex-wrap:wrap; margin-top:auto;}
   .month-cell .dot{width:4px; height:4px; border-radius:50%; background:var(--accent);}
   .month-cell .dot.done{background:var(--done);}
-  .month-cell .diary-mark{
-    position:absolute; top:5px; right:6px; width:5px; height:5px; border-radius:50%;
-    background:var(--ink); opacity:0.3;
-  }
+  .month-cell .expense-tag { position: absolute; top: 4px; right: 4px; font-size: 10px; color: var(--accent); font-weight: bold; }
 
   /* ---------- 日期詳情彈出卡 ---------- */
   #day-detail{display:none; margin-top:24px;}
   #day-detail.visible{display:block;}
-  .detail-card{
-    background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow);
-    border-left:4px solid var(--accent); padding:20px 22px; position:relative; border-top: 1px solid var(--line);
-  }
-  .detail-card .detail-head{
-    display:flex; align-items:baseline; justify-content:space-between; margin-bottom:16px;
-  }
+  .detail-card{ background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); border-left:4px solid var(--accent); padding:20px 22px; position:relative; border-top: 1px solid var(--line); }
+  .detail-card .detail-head{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:16px; }
   .detail-card .detail-date{font-size:18px; font-family:'Noto Serif TC',serif; font-weight:700;}
   .detail-card .detail-sub{font-size:12px; color:var(--muted); margin-left:8px;}
-  .close-detail{border:none; background:none; color:var(--muted); font-size:24px; cursor:pointer; line-height:1; padding:2px 6px;}
+  .close-detail{border:none; background:none; color:var(--muted); font-size:24px; cursor:pointer; padding:2px 6px;}
 
-  .task-list{margin-bottom:18px;}
-  .task-item{
-    display:flex; align-items:flex-start; gap:10px; padding:8px 0; font-size:14.5px;
-    border-left: 3px solid transparent; padding-left: 6px; margin-bottom:4px;
-  }
-  .task-checkbox{
-    flex:0 0 auto; width:19px; height:19px; border-radius:5px; border:1.5px solid var(--line);
-    cursor:pointer; margin-top:1px; display:flex; align-items:center; justify-content:center;
-    transition:all .12s ease; background:var(--card);
-  }
+  .task-list{margin-bottom:18px; border-bottom: 1px dashed var(--line); padding-bottom: 12px;}
+  .task-item{ display:flex; align-items:flex-start; gap:10px; padding:6px 0; font-size:14.5px; }
+  .task-checkbox{ flex:0 0 auto; width:19px; height:19px; border-radius:5px; border:1.5px solid var(--line); cursor:pointer; display:flex; align-items:center; justify-content:center; background:var(--card); }
   .task-checkbox.checked{background:var(--accent); border-color:var(--accent);}
-  .task-checkbox.checked::after{
-    content:''; width:9px; height:6px; border-left:2px solid white; border-bottom:2px solid white;
-    transform:rotate(-45deg) translate(0,-1px);
-  }
-  .task-text{flex:1; word-break:break-word; line-height:1.5; padding-top:0.5px;}
+  .task-checkbox.checked::after{ content:''; width:9px; height:6px; border-left:2px solid white; border-bottom:2px solid white; transform:rotate(-45deg) translate(0,-1px); }
+  .task-text{flex:1; word-break:break-word; line-height:1.5;}
   .task-text.done{color:var(--done); text-decoration:line-through;}
-  .task-del{
-    border:none; background:none; color:var(--muted); opacity:0; cursor:pointer; font-size:16px;
-    padding:0 6px; transition:opacity .12s ease;
-  }
+  .task-text.postponed{color:var(--muted); font-style:italic;}
+  .task-del{ border:none; background:none; color:var(--muted); opacity:0; cursor:pointer; font-size:16px; padding:0 6px; }
   .task-item:hover .task-del{opacity:0.6;}
-  .task-del:hover{opacity:1 !important; color:var(--accent);}
+  .postpone-btn { border: 1px solid var(--line); background: var(--card); color: var(--accent); font-size: 10.5px; border-radius: 4px; padding: 2px 6px; cursor: pointer; margin-left: 8px; }
 
-  .add-task-row{display:flex; flex-direction:column; gap:8px; margin-top:10px; background:var(--bg); padding:10px; border-radius:8px;}
-  .input-main-line { display:flex; gap:8px; }
-  .add-task-row input{
-    flex:1; border:1px solid var(--line); border-radius:6px; padding:8px 12px; font-size:14px;
-    background:var(--card); color:var(--ink); outline:none;
-  }
-  .add-task-row input:focus{border-color:var(--accent);}
-  .add-task-row button{
-    border:none; background:var(--ink); color:var(--bg); border-radius:6px; padding:8px 16px;
-    font-size:14px; cursor:pointer; font-weight:500;
-  }
-  .add-task-row button:hover{background:var(--accent);}
-  .detail-note-input {
-    width: 100%; border: 1px solid var(--line); border-radius: 4px; padding: 4px 8px;
-    font-size: 12px; background: var(--card); color: var(--ink); outline: none;
-  }
+  /* 🪙 記帳輸入區塊 */
+  .accounting-section { margin-bottom: 20px; background: #FAF9F6; padding: 12px; border-radius: 10px; border: 1px solid var(--line); }
+  .accounting-section h4 { font-size: 13.5px; margin: 0 0 10px 0; color: var(--ink); display: flex; justify-content: space-between; }
+  .ledger-row { display: flex; gap: 6px; margin-bottom: 10px; }
+  .ledger-row select { border: 1px solid var(--line); border-radius: 6px; padding: 6px; font-size: 13px; background: var(--card); outline: none; }
+  .ledger-row input { flex: 1; border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; font-size: 13px; outline: none; }
+  .ledger-row button { border: none; background: var(--ink); color: var(--bg); border-radius: 6px; padding: 0 14px; font-size: 13px; cursor: pointer; }
+  .ledger-list { display: flex; flex-direction: column; gap: 5px; max-height: 150px; overflow-y: auto; }
+  .ledger-item { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 5px 8px; border-radius: 4px; font-size: 12.5px; border: 1px solid var(--line); }
+  .ledger-item .del-ledg { border: none; background: transparent; color: var(--muted); cursor: pointer; font-size: 14px; }
 
-  .diary-section label{
-    font-size:11.5px; letter-spacing:0.15em; color:var(--muted); font-weight:500; display:block; margin-bottom:6px;
-  }
-  .diary-section textarea{
-    width:100%; min-height:110px; border:1px solid var(--line); border-radius:10px;
-    padding:12px 14px; font-size:14px; line-height:1.6; resize:vertical;
-    background:var(--bg); color:var(--ink); outline:none;
-  }
-  .diary-section textarea:focus{border-color:var(--accent);}
+  .diary-section label{ font-size:11.5px; letter-spacing:0.15em; color:var(--muted); font-weight:500; display:block; margin-bottom:6px; }
+  .diary-section textarea{ width:100%; min-height:100px; border:1px solid var(--line); border-radius:10px; padding:12px 14px; font-size:14px; line-height:1.6; resize:vertical; background:var(--bg); outline:none; }
   .save-indicator{font-size:11px; color:var(--muted); margin-top:6px; height:14px;}
+  #loading-screen{ position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center; z-index:200; color:var(--muted); font-size:13px; letter-spacing:0.1em; }
 
-  /* ---------- 載入中 ---------- */
-  #loading-screen{
-    position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center;
-    z-index:200; color:var(--muted); font-size:13px; letter-spacing:0.1em;
-  }
-
-  /* RWD 板塊優化：小螢幕自動切回好閱讀的垂直直排 */
-  @media (max-width:1024px){
-    .workspace-layout { grid-template-columns: 1fr; }
-    .week-kanban { grid-template-columns: repeat(4, 1fr); }
-  }
-  @media (max-width:680px){
-    .week-kanban { grid-template-columns: repeat(2, 1fr); }
-  }
-  @media (max-width:480px){
-    .week-kanban { grid-template-columns: 1fr; }
-    .detail-card{padding:16px;}
-  }
+  @media (max-width:1024px){ .workspace-layout { grid-template-columns: 1fr; } .week-kanban { grid-template-columns: repeat(4, 1fr); } }
+  @media (max-width:680px){ .week-kanban { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width:480px){ .week-kanban { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -358,8 +231,8 @@
 
 <div id="login-screen" style="display:none;">
   <div class="brand-mark">JOURNAL · PLANNER</div>
-  <h1>P人消滅計畫</h1>
-  <p>procrastination<br>noun [U]<br>We need decisive action</p>
+  <h1>P人消滅計畫 v3</h1>
+  <p>合併週計畫池 ＋ 精實記帳模式<br>打造高度自律生活</p>
   <button class="google-btn" id="google-login-btn">
     <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.9 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.5 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 16 19 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.5 29.6 4 24 4c-7.4 0-13.8 4.2-17 10.7z"/><path fill="#4CAF50" d="M24 44c5.4 0 10.3-2.1 14-5.5l-6.5-5.4C29.4 35 26.8 36 24 36c-5.3 0-9.7-3.1-11.3-7.6l-6.6 5.1C9.9 39.7 16.4 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-1.1 3.1-3.4 5.6-6.3 7.1l6.5 5.4C39.5 37.2 44 31.5 44 24c0-1.3-.1-2.7-.4-3.5z"/></svg>
     使用 Google 帳號登入
@@ -370,8 +243,8 @@
 <div id="app">
   <header class="topbar">
     <div class="topbar-left">
-      <span class="eyebrow">KANBAN JOURNAL</span>
-      <h1>P人自有妙計</h1>
+      <span class="eyebrow">KANBAN & LEDGER</span>
+      <h1>P人大作戰</h1>
     </div>
     <div class="topbar-right">
       <img id="user-avatar" src="" alt="使用者">
@@ -402,14 +275,25 @@
   <div class="workspace-layout">
     
     <div class="side-panel">
-      <div class="panel-card">
-        <h3>本月目標</h3>
-        <textarea class="month-goal-textarea" id="month-goal-input" placeholder="寫下這個月的核心目標與願景 ···"></textarea>
-        <div class="save-indicator" id="month-goal-indicator" style="font-size:11px; color:var(--muted); text-align:right;"></div>
+      <div class="dashboard-grid">
+        <div class="stat-mini-box score-box-dark">
+          <div class="title" id="score-month-label">當月戰力值</div>
+          <div class="num" id="total-score-display">0</div>
+        </div>
+        <div class="stat-mini-box">
+          <div class="title">本週 / 本月支出</div>
+          <div class="num" id="expense-summary-display" style="font-size:16px; margin-top:4px; font-family:sans-serif;">$0 / $0</div>
+        </div>
       </div>
 
       <div class="panel-card">
-        <h3>本週計畫</h3>
+        <h3>本月目標</h3>
+        <textarea class="month-goal-textarea" id="month-goal-input" placeholder="寫下這個月的核心目標與願景 ···"></textarea>
+        <div class="save-indicator" id="month-goal-indicator" style="text-align:right;"></div>
+      </div>
+
+      <div class="panel-card">
+        <h3>本週計畫大池子</h3>
         <div class="color-picker">
           <span style="font-size:11px; color:var(--muted); margin-right:4px;">標籤:</span>
           <div class="color-dot active" data-color="none" style="background:var(--tag-none)"></div>
@@ -422,10 +306,10 @@
         </div>
         <div class="pool-input-area">
           <div class="pool-input-row">
-            <input type="text" id="pool-task-input" placeholder="新增週計畫...">
+            <input type="text" id="pool-task-input" placeholder="輸入計畫後按注入...">
             <button id="pool-task-add-btn">注入</button>
           </div>
-          <input type="text" id="pool-task-note" class="pool-note-input" placeholder="📝 備註...">
+          <input type="text" id="pool-task-note" class="pool-note-input" placeholder="📝 加上計畫備註（選填，點擊可改）...">
         </div>
         <div class="pool-list" id="pool-list"></div>
       </div>
@@ -433,7 +317,7 @@
 
     <div class="main-content-view">
       <div class="week-view-container">
-        <div class="bubble-banner" id="bubble-banner">🎈 偵測到上週未完成任務！已化為時間泡泡飄入當週池子中。</div>
+        <div class="bubble-banner" id="bubble-banner">🎈 舊週計畫未完成！觸發拖延惩罰，化作時間泡泡流過來。</div>
         <div id="week-view" class="week-kanban"></div>
       </div>
 
@@ -452,28 +336,31 @@
         <div><span class="detail-date" id="detail-date-label"></span><span class="detail-sub" id="detail-dow-label"></span></div>
       </div>
 
+      <div style="font-size:12px; font-weight:700; margin-bottom:6px; color:var(--muted);">當日任務分配狀態</div>
       <div class="task-list" id="task-list"></div>
       
-      <div class="add-task-row">
-        <div class="color-picker" id="detail-color-picker">
-          <span style="font-size:11px; color:var(--muted); margin-right:4px;">標籤:</span>
-          <div class="color-dot active" data-color="none" style="background:var(--tag-none)"></div>
-          <div class="color-dot" data-color="red" style="background:var(--tag-red)"></div>
-          <div class="color-dot" data-color="green" style="background:var(--tag-green)"></div>
-          <div class="color-dot" data-color="blue" style="background:var(--tag-blue)"></div>
-          <div class="color-dot" data-color="yellow" style="background:var(--tag-yellow)"></div>
-          <div class="color-dot" data-color="gray" style="background:var(--tag-gray)"></div>
-          <div class="color-dot" data-color="purple" style="background:var(--tag-purple)"></div>
+      <div class="accounting-section">
+        <h4><span>🪙 今日支出記帳</span> <span id="detail-day-spend-total" style="color:var(--accent);">共 $0</span></h4>
+        <div class="ledger-row">
+          <select id="ledger-category">
+            <option value="三餐">三餐</option>
+            <option value="消夜">消夜</option>
+            <option value="手搖">手搖</option>
+            <option value="飲料">飲料</option>
+            <option value="零食">零食</option>
+            <option value="生活">生活</option>
+            <option value="打扮">打扮</option>
+            <option value="休閒">休閒</option>
+            <option value="課業">課業</option>
+          </select>
+          <input type="number" id="ledger-amount" placeholder="輸入金額" min="0" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+          <button id="add-ledger-btn">記帳</button>
         </div>
-        <div class="input-main-line">
-          <input type="text" id="new-task-input" placeholder="待辦清單...">
-          <button id="add-task-btn">新增</button>
-        </div>
-        <input type="text" id="new-task-note" class="detail-note-input" placeholder="📝 備註...">
+        <div class="ledger-list" id="ledger-list"></div>
       </div>
 
-      <div class="diary-section" style="margin-top:22px;">
-        <label>小日記</label>
+      <div class="diary-section">
+        <label>今日小日記</label>
         <textarea id="diary-textarea" placeholder="今天過得怎麼樣呢 ···"></textarea>
         <div class="save-indicator" id="save-indicator"></div>
       </div>
@@ -487,16 +374,16 @@
 
 <script>
 /* ============================================================
-   Firebase 設定 — 🚨 請貼上你自己 Firebase 真正的位置和金鑰
+   Firebase 配置區
    ============================================================ */
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyBXy28clA40B41r_iyEXzWtkH21k1MPnG0",
-  authDomain: "daily-schedule-hahaha.firebaseapp.com",
-  projectId: "daily-schedule-hahaha",
-  storageBucket: "daily-schedule-hahaha.firebasestorage.app",
-  messagingSenderId: "26149222039",
-  appId: "1:26149222039:web:ec299f4513c589935f5bd2",
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH_DOMAIN",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_STORAGE_BUCKET",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID",
+  measurementId: "YOUR_MEASUREMENT_ID"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -504,133 +391,114 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 
 /* ============================================================
-   全域狀態與變數
+   全域變數
    ============================================================ */
 let currentUser = null;
 let currentView = 'week';        
 let anchorDate = new Date();      
 let selectedDateStr = null;       
-let daysData = {};                // { 'YYYY-MM-DD': { tasks:[...], diary:'' } }
-let weeksMeta = {};               // { 'YYYY-Wxx': { title: '' } }
-let monthsMeta = {};              // { 'YYYY-MM': { goal: '' } }
-let globalPool = [];              // [{id, text, color, type, note, status, weekId...}]
+let daysData = {};                // 儲存每日任務與日記、記帳
+let weeksMeta = {};               
+let monthsMeta = {};              
+let globalPool = [];              
+let scoreLogs = [];               
 let selectedPoolColor = 'none';
-let selectedDetailColor = 'none';
 
 let unsubscribeDays = null;
 let unsubscribeWeeks = null;
 let unsubscribeMonths = null;
 let unsubscribePool = null;
+let unsubscribeScores = null;
 
 let diarySaveTimer = null;
 let monthGoalTimer = null;
 
 const WEEKDAY_LABELS = ['一','二','三','四','五','六','日'];
 const WEEKDAY_LABELS_SHORT = ['週一','週二','週三','週四','週五','週六','週日'];
-const MORANDI_COLORS = {
-  none: '#E8E3DA',
-  red: '#B87D73',
-  green: '#8A9A86',
-  blue: '#7E8F9F',
-  yellow: '#C2A675',
-  gray: '#9FA09E',
-  purple: '#A294B8'
-};
+const MORANDI_COLORS = { none: '#E8E3DA', red: '#B87D73', green: '#8A9A86', blue: '#7E8F9F', yellow: '#C2A675', gray: '#9FA09E', purple: '#A294B8' };
 
-/* ============================================================
-   日期計算小工具
-   ============================================================ */
 function pad2(n){ return String(n).padStart(2,'0'); }
-
-function toDateStr(d){
-  return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
-}
-
-function fromDateStr(s){
-  const [y,m,d] = s.split('-').map(Number);
-  return new Date(y, m-1, d);
-}
-
-function isSameDay(a,b){
-  return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
-}
+function toDateStr(d){ return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
+function fromDateStr(s){ const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); }
+function isSameDay(a,b){ return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
+function toMonthStr(d) { return `${d.getFullYear()}-${pad2(d.getMonth()+1)}`; }
 
 function getMondayOfWeek(d){
-  const date = new Date(d);
-  const dow = date.getDay(); 
+  const date = new Date(d); const dow = date.getDay(); 
   const diff = (dow === 0 ? -6 : 1 - dow); 
-  date.setDate(date.getDate() + diff);
-  date.setHours(0,0,0,0);
+  date.setDate(date.getDate() + diff); date.setHours(0,0,0,0);
   return date;
 }
 
 function getWeekIdentifier(d) {
-  const mon = getMondayOfWeek(d);
-  const year = mon.getFullYear();
+  const mon = getMondayOfWeek(d); const year = mon.getFullYear();
   const startOfYear = new Date(year, 0, 1);
   const pastDays = Math.floor((mon - startOfYear) / 86400000);
-  const weekNum = pad2(Math.ceil((pastDays + startOfYear.getDay() + 1) / 7));
-  return `${year}-W${weekNum}`;
+  return `${year}-W${pad2(Math.ceil((pastDays + startOfYear.getDay() + 1) / 7))}`;
 }
 
-function toMonthStr(d) {
-  return `${d.getFullYear()}-${pad2(d.getMonth()+1)}`;
+function addDays(d, n){ const date = new Date(d); date.setDate(date.getDate() + n); return date; }
+function addMonths(d, n){ const date = new Date(d); date.setMonth(date.getMonth() + n); return date; }
+function escapeHtml(str) { if (!str) return ''; const div = document.createElement('div'); div.textContent = str; return div.innerHTML; }
+
+/* ============================================================
+   分數記錄核心與支出計算
+   ============================================================ */
+async function logScoreChange(points, reason, targetDateStr) {
+  if (!currentUser) return;
+  const refDate = targetDateStr ? fromDateStr(targetDateStr) : anchorDate;
+  await db.collection('users').doc(currentUser.uid).collection('scores').add({
+    points: points, reason: reason, monthStr: toMonthStr(refDate), dateStr: targetDateStr || toDateStr(anchorDate),
+    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+  });
 }
 
-function addDays(d, n){
-  const date = new Date(d);
-  date.setDate(date.getDate() + n);
-  return date;
-}
+function updateGlobalStatsUI() {
+  if (!currentUser) return;
+  const currentMonthStr = toMonthStr(anchorDate);
+  document.getElementById('score-month-label').textContent = `${anchorDate.getMonth()+1}月 戰力值`;
+  
+  // 1. 計算分數
+  const monthlyPoints = scoreLogs.filter(log => log.monthStr === currentMonthStr).reduce((sum, log) => sum + log.points, 0);
+  const scoreDisplay = document.getElementById('total-score-display');
+  scoreDisplay.textContent = monthlyPoints >= 0 ? `+${monthlyPoints}` : monthlyPoints;
+  scoreDisplay.className = 'num ' + (monthlyPoints >= 0 ? 'positive' : 'negative');
 
-function addMonths(d, n){
-  const date = new Date(d);
-  date.setMonth(date.getMonth() + n);
-  return date;
-}
+  // 2. 計算週與月支出
+  const mon = getMondayOfWeek(anchorDate);
+  const weekDates = [];
+  for(let i=0; i<7; i++) weekDates.push(toDateStr(addDays(mon, i)));
 
-function escapeHtml(str) {
-  if (!str) return '';
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
+  let weeklyExpenseSum = 0;
+  let monthlyExpenseSum = 0;
+
+  Object.keys(daysData).forEach(dStr => {
+    const dayLedger = daysData[dStr].ledger || [];
+    const dayTotal = dayLedger.reduce((s, item) => s + (item.amount || 0), 0);
+    
+    if (weekDates.includes(dStr)) weeklyExpenseSum += dayTotal;
+    if (dStr.startsWith(currentMonthStr)) monthlyExpenseSum += dayTotal;
+  });
+
+  document.getElementById('expense-summary-display').textContent = `$${weeklyExpenseSum} / $${monthlyExpenseSum}`;
 }
 
 /* ============================================================
-   色彩選擇器事件綁定
+   認證與資料監聽
    ============================================================ */
-document.querySelectorAll('.color-picker:not(#detail-color-picker) .color-dot').forEach(dot => {
+document.querySelectorAll('.color-picker .color-dot').forEach(dot => {
   dot.addEventListener('click', (e) => {
-    document.querySelectorAll('.color-picker:not(#detail-color-picker) .color-dot').forEach(d => d.classList.remove('active'));
-    e.target.classList.add('active');
-    selectedPoolColor = e.target.dataset.color;
+    document.querySelectorAll('.color-picker .color-dot').forEach(d => d.classList.remove('active'));
+    e.target.classList.add('active'); selectedPoolColor = e.target.dataset.color;
   });
 });
 
-document.querySelectorAll('#detail-color-picker .color-dot').forEach(dot => {
-  dot.addEventListener('click', (e) => {
-    document.querySelectorAll('#detail-color-picker .color-dot').forEach(d => d.classList.remove('active'));
-    e.target.classList.add('active');
-    selectedDetailColor = e.target.dataset.color;
-  });
-});
-
-/* ============================================================
-   Firebase Auth 認證機制
-   ============================================================ */
 const googleProvider = new firebase.auth.GoogleAuthProvider();
-
 document.getElementById('google-login-btn').addEventListener('click', () => {
   document.getElementById('login-error').textContent = '';
-  auth.signInWithPopup(googleProvider).catch(err => {
-    console.error(err);
-    document.getElementById('login-error').textContent = '登入失敗，請再試一次。';
-  });
+  auth.signInWithPopup(googleProvider).catch(() => { document.getElementById('login-error').textContent = '登入失敗，請重試。'; });
 });
-
-document.getElementById('logout-btn').addEventListener('click', () => {
-  auth.signOut();
-});
+document.getElementById('logout-btn').addEventListener('click', () => { auth.signOut(); });
 
 auth.onAuthStateChanged(user => {
   document.getElementById('loading-screen').style.display = 'none';
@@ -639,21 +507,14 @@ auth.onAuthStateChanged(user => {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').classList.add('visible');
     document.getElementById('user-avatar').src = user.photoURL || '';
-    
     attachFirestoreListeners();
   } else {
-    currentUser = null;
-    detachListeners();
-    daysData = {}; weeksMeta = {}; monthsMeta = {}; globalPool = [];
+    currentUser = null; detachListeners();
     document.getElementById('login-screen').style.display = 'flex';
     document.getElementById('app').classList.remove('visible');
-    document.getElementById('day-detail').classList.remove('visible');
   }
 });
 
-/* ============================================================
-   Firestore 即時資料監聽 (onSnapshot)
-   ============================================================ */
 function attachFirestoreListeners() {
   const userDocRef = db.collection('users').doc(currentUser.uid);
 
@@ -663,392 +524,252 @@ function attachFirestoreListeners() {
       if (change.type === 'removed') delete daysData[dateStr];
       else daysData[dateStr] = change.doc.data();
     });
-    // 每日清單變動時，同步檢查並更新週計畫的完結狀態
     checkAndSyncWeekPlans();
     renderCurrentView();
     if (selectedDateStr) renderDayDetail(selectedDateStr);
   });
 
   unsubscribeWeeks = userDocRef.collection('weeks').onSnapshot(snapshot => {
-    snapshot.docChanges().forEach(change => {
-      if (change.type !== 'removed') weeksMeta[change.doc.id] = change.doc.data();
-    });
+    snapshot.docChanges().forEach(change => { if (change.type !== 'removed') weeksMeta[change.doc.id] = change.doc.data(); });
     updateWeekTitleUI();
   });
 
   unsubscribeMonths = userDocRef.collection('months').onSnapshot(snapshot => {
-    snapshot.docChanges().forEach(change => {
-      if (change.type !== 'removed') monthsMeta[change.doc.id] = change.doc.data();
-    });
+    snapshot.docChanges().forEach(change => { if (change.type !== 'removed') monthsMeta[change.doc.id] = change.doc.data(); });
     updateMonthGoalUI();
   });
   
   unsubscribePool = userDocRef.collection('pool').onSnapshot(snapshot => {
-    globalPool = [];
-    snapshot.forEach(doc => {
-      globalPool.push({ id: doc.id, ...doc.data() });
-    });
+    globalPool = []; snapshot.forEach(doc => { globalPool.push({ id: doc.id, ...doc.data() }); });
     globalPool.sort((a, b) => a.id.localeCompare(b.id));
     renderPoolUI();
+  });
+
+  unsubscribeScores = userDocRef.collection('scores').onSnapshot(snapshot => {
+    scoreLogs = []; snapshot.forEach(doc => { scoreLogs.push(doc.data()); });
+    updateGlobalStatsUI();
   });
 }
 
 function detachListeners() {
-  if (unsubscribeDays) unsubscribeDays();
-  if (unsubscribeWeeks) unsubscribeWeeks();
-  if (unsubscribeMonths) unsubscribeMonths();
-  if (unsubscribePool) unsubscribePool();
+  if (unsubscribeDays) unsubscribeDays(); if (unsubscribeWeeks) unsubscribeWeeks();
+  if (unsubscribeMonths) unsubscribeMonths(); if (unsubscribePool) unsubscribePool();
+  if (unsubscribeScores) unsubscribeScores();
 }
 
-function getDayData(dateStr) {
-  return daysData[dateStr] || { tasks: [], diary: '' };
-}
+function getDayData(dateStr) { return daysData[dateStr] || { tasks: [], diary: '', ledger: [] }; }
 
-/* 新增每日清單任務 (如果是日計畫，同步寫入大池子) */
-async function addTask(dateStr, text, color = 'none', note = '', parentId = '') {
-  const trimmed = text.trim();
-  if (!trimmed) return;
+/* ============================================================
+   任務流轉分配與「明天再做」邏輯
+   ============================================================ */
+async function addDistributedTask(dateStr, text, color, note, parentId) {
   const current = getDayData(dateStr);
-  
   const taskId = Date.now().toString(36) + Math.random().toString(36).slice(2,6);
-  const newTask = { 
-    id: taskId, 
-    text: trimmed, 
-    done: false,
-    color: color,
-    note: note,
-    parentId: parentId  // 用來連動週計畫
-  };
-  
-  const tasks = [...(current.tasks || []), newTask];
-  await db.collection('users').doc(currentUser.uid).collection('days').doc(dateStr).set({ tasks, diary: current.diary || '' }, { merge: true });
-
-  // 🌟 核心：如果是一般手動新增的日計畫（沒有 parentId），同步流入大池子
-  if (!parentId) {
-    const targetWeekId = getWeekIdentifier(fromDateStr(dateStr));
-    await db.collection('users').doc(currentUser.uid).collection('pool').add({
-      text: trimmed,
-      color: color,
-      note: note,
-      type: 'day',
-      status: 'pending',
-      weekId: targetWeekId,
-      linkedDayStr: dateStr,
-      linkedTaskId: taskId,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-  }
+  const tasks = [...(current.tasks || []), { id: taskId, text: text, done: false, color: color, note: note, parentId: parentId }];
+  await db.collection('users').doc(currentUser.uid).collection('days').doc(dateStr).set({ tasks }, { merge: true });
 }
 
-/* 切換日計畫勾選狀態（雙向連動大池子） */
 async function toggleTask(dateStr, taskId) {
-  const current = getDayData(dateStr);
-  let parentPoolIdToTrack = null;
-
+  const current = getDayData(dateStr); let pointsToAward = 0;
   const tasks = (current.tasks || []).map(t => {
     if (t.id === taskId) {
-      const nextDone = !t.done;
-      parentPoolIdToTrack = t.parentId;
-      
-      // 連動更新池子中對應的單一「日匯入」計畫
-      db.collection('users').doc(currentUser.uid).collection('pool')
-        .where('linkedDayStr', '==', dateStr)
-        .where('linkedTaskId', '==', taskId)
-        .get().then(snapshot => {
-          snapshot.forEach(doc => {
-            doc.ref.update({ status: nextDone ? 'completed' : 'pending' });
-          });
-        });
-
+      const nextDone = !t.done; pointsToAward = nextDone ? 1 : -1;
       return { ...t, done: nextDone };
     }
     return t;
   });
-
   await db.collection('users').doc(currentUser.uid).collection('days').doc(dateStr).set({ tasks }, { merge: true });
-
-  // 如果這是一個被分配的週計畫，觸發全面檢查
-  if (parentPoolIdToTrack) {
-    setTimeout(() => { checkAndSyncWeekPlans(); }, 300);
-  }
+  if (pointsToAward !== 0) await logScoreChange(pointsToAward, pointsToAward > 0 ? "完成分配任務" : "取消任務完成", dateStr);
+  setTimeout(() => { checkAndSyncWeekPlans(); }, 300);
 }
 
-/* 刪除日期任務 (同步處理大池子) */
 async function deleteTask(dateStr, taskId) {
   const current = getDayData(dateStr);
   const tasks = (current.tasks || []).filter(t => t.id !== taskId);
   await db.collection('users').doc(currentUser.uid).collection('days').doc(dateStr).set({ tasks }, { merge: true });
-
-  // 池子同步刪除
-  db.collection('users').doc(currentUser.uid).collection('pool')
-    .where('linkedDayStr', '==', dateStr)
-    .where('linkedTaskId', '==', taskId)
-    .get().then(snapshot => {
-      snapshot.forEach(doc => { doc.ref.delete(); });
-    });
+  setTimeout(() => { checkAndSyncWeekPlans(); }, 300);
 }
 
-/* 檢查週計畫的所有分配日是否全打勾了 */
+/* 明天再做順延按鈕 */
+async function postponeTaskToTomorrow(dateStr, taskId) {
+  const current = getDayData(dateStr); let taskToMove = null;
+  const tasks = (current.tasks || []).map(t => {
+    if (t.id === taskId) { taskToMove = t; return { ...t, postponed: true }; }
+    return t;
+  });
+  if (!taskToMove) return;
+
+  await db.collection('users').doc(currentUser.uid).collection('days').doc(dateStr).set({ tasks }, { merge: true });
+  const tomorrowStr = toDateStr(addDays(fromDateStr(dateStr), 1));
+  await addDistributedTask(tomorrowStr, `[續] ${taskToMove.text}`, taskToMove.color, taskToMove.note, taskToMove.parentId);
+  
+  await logScoreChange(-3, `延宕任務「${taskToMove.text}」至明天`, dateStr);
+  alert('已流向明天！分數 -3 🩸');
+}
+
 function checkAndSyncWeekPlans() {
   if (!currentUser) return;
-  
-  // 找出所有未完結的週計畫
-  const weekPlans = globalPool.filter(item => item.type === 'week' && item.status !== 'completed');
-  
-  weekPlans.forEach(async (plan) => {
+  globalPool.forEach(async (plan) => {
     if (!plan.assignedDates || plan.assignedDates.length === 0) return;
-    
     let allDone = true;
-    
-    // 巡視所有分配出去的日子
     for (const dStr of plan.assignedDates) {
-      const dayTasks = getDayData(dStr).tasks || [];
-      // 找有沒有對應這個週計畫、且還沒完成的任務
-      const matchTask = dayTasks.find(t => t.parentId === plan.id);
-      if (matchTask && !matchTask.done) {
-        allDone = false;
-        break;
-      }
-      // 如果根本找不到這個子任務（被刪了），也視為未完成
-      if (!matchTask) { allDone = false; break; }
+      const matchTask = (getDayData(dStr).tasks || []).find(t => t.parentId === plan.id);
+      if (!matchTask || !matchTask.done) { allDone = false; break; }
     }
-    
-    // 全打勾了，判定大任務完結！
-    if (allDone) {
-      await db.collection('users').doc(currentUser.uid).collection('pool').doc(plan.id).update({ status: 'completed' });
+    const nextStatus = allDone ? 'completed' : 'pending';
+    if (plan.status !== nextStatus) {
+      await db.collection('users').doc(currentUser.uid).collection('pool').doc(plan.id).update({ status: nextStatus });
     }
   });
-}
-
-/* 自動儲存小日記與月目標 */
-function scheduleDiarySave(dateStr, text) {
-  clearTimeout(diarySaveTimer);
-  const indicator = document.getElementById('save-indicator');
-  indicator.textContent = '自動儲存中···';
-  diarySaveTimer = setTimeout(async () => {
-    const current = getDayData(dateStr);
-    await db.collection('users').doc(currentUser.uid).collection('days').doc(dateStr).set({ diary: text, tasks: current.tasks || [] }, { merge: true });
-    indicator.textContent = '已儲存 ✓';
-  }, 800);
-}
-
-document.getElementById('month-goal-input').addEventListener('input', (e) => {
-  clearTimeout(monthGoalTimer);
-  const mStr = toMonthStr(anchorDate);
-  const indicator = document.getElementById('month-goal-indicator');
-  indicator.textContent = '同步中...';
-  monthGoalTimer = setTimeout(async () => {
-    await db.collection('users').doc(currentUser.uid).collection('months').doc(mStr).set({ goal: e.target.value }, { merge: true });
-    indicator.textContent = '儲存成功';
-    setTimeout(() => { indicator.textContent = ''; }, 1500);
-  }, 800);
-});
-
-function updateMonthGoalUI() {
-  const mStr = toMonthStr(anchorDate);
-  const tx = document.getElementById('month-goal-input');
-  if (document.activeElement !== tx) {
-    tx.value = (monthsMeta[mStr] && monthsMeta[mStr].goal) ? monthsMeta[mStr].goal : '';
-  }
-}
-
-/* 自訂週標題邏輯 */
-const editWeekBtn = document.getElementById('week-title-edit-btn');
-const weekTitleText = document.getElementById('week-title-text');
-const weekTitleInput = document.getElementById('week-title-input');
-
-editWeekBtn.addEventListener('click', () => {
-  if (weekTitleInput.style.display === 'none' || weekTitleInput.style.display === '') {
-    weekTitleInput.style.display = 'inline-block';
-    weekTitleText.style.display = 'none';
-    weekTitleInput.value = weekTitleText.textContent === '點擊命名' ? '' : weekTitleText.textContent;
-    weekTitleInput.focus();
-    editWeekBtn.textContent = '💾';
-  } else {
-    saveWeekTitle();
-  }
-});
-
-weekTitleInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') saveWeekTitle(); });
-
-async function saveWeekTitle() {
-  const wId = getWeekIdentifier(anchorDate);
-  const val = weekTitleInput.value.trim();
-  await db.collection('users').doc(currentUser.uid).collection('weeks').doc(wId).set({ title: val });
-  weekTitleInput.style.display = 'none';
-  weekTitleText.style.display = 'inline-block';
-  editWeekBtn.textContent = '✏️';
-}
-
-function updateWeekTitleUI() {
-  const wId = getWeekIdentifier(anchorDate);
-  if (weeksMeta[wId] && weeksMeta[wId].title) {
-    weekTitleText.textContent = weeksMeta[wId].title;
-  } else {
-    weekTitleText.textContent = '點擊命名';
-  }
 }
 
 /* ============================================================
-   任務池（池子）核心操作與漂流泡泡
+   📝 備註動態雙擊/點擊即時編輯
    ============================================================ */
-document.getElementById('pool-task-add-btn').addEventListener('click', addPoolItem);
-document.getElementById('pool-task-input').addEventListener('keydown', (e) => { if(e.key === 'Enter') addPoolItem(); });
-
-async function addPoolItem() {
-  const input = document.getElementById('pool-task-input');
-  const noteInput = document.getElementById('pool-task-note');
-  const txt = input.value.trim();
-  const noteTxt = noteInput.value.trim();
-  if(!txt) return;
-
-  const wId = getWeekIdentifier(anchorDate);
-
-  await db.collection('users').doc(currentUser.uid).collection('pool').add({
-    text: txt,
-    color: selectedPoolColor,
-    note: noteTxt,
-    type: 'week', // 預設手動注入池子的是長效週計畫
-    status: 'pending',
-    weekId: wId,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+function enableInlineNoteEdit(element, id, collectionType, dateStr = null, taskId = null) {
+  element.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const currentNoteText = element.dataset.rawNote || '';
+    const input = document.createElement('input');
+    input.type = 'text'; input.className = 'note-edit-input'; input.value = currentNoteText;
+    
+    const saveNoteUpdate = async () => {
+      const newNote = input.value.trim();
+      if (newNote === currentNoteText) { renderCurrentView(); return; }
+      if (collectionType === 'pool') {
+        await db.collection('users').doc(currentUser.uid).collection('pool').doc(id).update({ note: newNote });
+      } else if (collectionType === 'days' && dateStr && taskId) {
+        const currentData = getDayData(dateStr);
+        const updatedTasks = (currentData.tasks || []).map(t => t.id === taskId ? { ...t, note: newNote } : t);
+        await db.collection('users').doc(currentUser.uid).collection('days').doc(dateStr).set({ tasks: updatedTasks }, { merge: true });
+      }
+    };
+    input.addEventListener('keydown', (evt) => { if (evt.key === 'Enter') saveNoteUpdate(); });
+    input.addEventListener('blur', saveNoteUpdate);
+    element.replaceWith(input); input.focus();
   });
-  input.value = '';
-  noteInput.value = '';
 }
 
-/* 跨週未完成任務化為時間泡泡漂流至當週 */
+/* 跨週未完成自動暴擊懲罰 -5 分 */
 async function checkAndCarryOverBubbles() {
   if (!currentUser) return;
   const currentWeekId = getWeekIdentifier(anchorDate);
-  
-  // 撈出所有非當週且未完成的池子任務
   const overdueTasks = globalPool.filter(item => item.status === 'pending' && item.weekId && item.weekId < currentWeekId);
-  if (overdueTasks.length === 0) {
-    document.getElementById('bubble-banner').style.display = 'none';
-    return;
-  }
+  if (overdueTasks.length === 0) { document.getElementById('bubble-banner').style.display = 'none'; return; }
 
   const batch = db.batch();
-  overdueTasks.forEach(item => {
-    const docRef = db.collection('users').doc(currentUser.uid).collection('pool').doc(item.id);
-    batch.update(docRef, { weekId: currentWeekId, isBubble: true });
-  });
-
+  for (const item of overdueTasks) {
+    batch.update(db.collection('users').doc(currentUser.uid).collection('pool').doc(item.id), { weekId: currentWeekId, isBubble: true });
+    await logScoreChange(-5, `週計畫「${item.text}」未落實跨週漂流`, toDateStr(anchorDate));
+  }
   await batch.commit();
-  document.getElementById('bubble-banner').style.display = 'flex';
-  setTimeout(() => { document.getElementById('bubble-banner').style.display = 'none'; }, 4000);
+  document.getElementById('bubble-banner').style.display = 'block';
+  setTimeout(() => { document.getElementById('bubble-banner').style.display = 'none'; }, 5000);
 }
 
+/* ============================================================
+   🪙 記帳運算增刪
+   ============================================================ */
+async function addLedgerItem() {
+  if (!selectedDateStr) return;
+  const catSelect = document.getElementById('ledger-category');
+  const amtInput = document.getElementById('ledger-amount');
+  const category = catSelect.value;
+  const amount = parseInt(amtInput.value, 10);
+
+  if (isNaN(amount) || amount <= 0) { alert('請輸入正確的金額！'); return; }
+
+  const current = getDayData(selectedDateStr);
+  const currentLedger = current.ledger || [];
+  const newItem = { id: 'ledg_' + Date.now().toString(36), category, amount };
+
+  await db.collection('users').doc(currentUser.uid).collection('days').doc(selectedDateStr).set({
+    ledger: [...currentLedger, newItem]
+  }, { merge: true });
+
+  amtInput.value = '';
+}
+
+async function deleteLedgerItem(itemId) {
+  if (!selectedDateStr) return;
+  const current = getDayData(selectedDateStr);
+  const updatedLedger = (current.ledger || []).filter(item => item.id !== itemId);
+  await db.collection('users').doc(currentUser.uid).collection('days').doc(selectedDateStr).set({ ledger: updatedLedger }, { merge: true });
+}
+
+/* ============================================================
+   介面渲染群
+   ============================================================ */
 function renderPoolUI() {
-  const container = document.getElementById('pool-list');
-  if (!container) return;
+  const container = document.getElementById('pool-list'); if (!container) return;
   container.innerHTML = '';
-  
   const currentWeekId = getWeekIdentifier(anchorDate);
   const thisWeekTasks = globalPool.filter(item => item.weekId === currentWeekId);
 
   if (thisWeekTasks.length === 0) {
-    container.innerHTML = `<div style="font-size:12px; color:var(--muted); font-style:italic; padding:10px;">當週池子空空的，寫下週計畫吧！</div>`;
+    container.innerHTML = `<div style="font-size:12px; color:var(--muted); font-style:italic; padding:10px;">當週池子空空的，請注入目標計畫。</div>`;
     return;
   }
-
   const monday = getMondayOfWeek(anchorDate);
 
   thisWeekTasks.forEach(item => {
-    const div = document.createElement('div');
-    div.className = 'pool-item';
-    
-    if (item.status === 'completed') {
-      div.style.opacity = '0.55';
-    }
-    
+    const div = document.createElement('div'); div.className = 'pool-item';
     div.style.borderLeft = `4px solid ${MORANDI_COLORS[item.color || 'none']}`;
+    if (item.status === 'completed') div.style.opacity = '0.55';
     
     let checkboxesHtml = '';
-    if (item.type === 'week') {
-      for(let i=0; i<7; i++) {
-        const targetDate = addDays(monday, i);
-        const dateStr = toDateStr(targetDate);
-        checkboxesHtml += `
-          <label style="display:inline-flex; align-items:center; font-size:11px; margin-right:6px; cursor:pointer; color:var(--muted);">
-            <input type="checkbox" class="assign-check" value="${dateStr}" style="margin-right:2px; cursor:pointer;">
-            ${WEEKDAY_LABELS_SHORT[i].replace('週','')}
-          </label>
-        `;
-      }
+    for(let i=0; i<7; i++) {
+      const dStr = toDateStr(addDays(monday, i));
+      const alreadyAssigned = (item.assignedDates || []).includes(dStr);
+      checkboxesHtml += `
+        <label style="display:inline-flex; align-items:center; font-size:11px; margin-right:5px; color:var(--muted);">
+          <input type="checkbox" class="assign-check" value="${dStr}" ${alreadyAssigned ? 'checked' : ''}>${WEEKDAY_LABELS_SHORT[i].replace('週','')}
+        </label>`;
     }
 
-    const noteHtml = item.note ? `<div style="font-size:11px; color:var(--muted); background:rgba(43,40,37,0.04); padding:4px 6px; border-radius:4px; margin-top:4px; font-style:italic;">📝 ${escapeHtml(item.note)}</div>` : '';
-    
-    // 泡泡標籤或種類標籤
-    let badgeHtml = '';
-    if (item.isBubble) {
-      badgeHtml = `<span style="font-size:9px; background:#C75D3D; color:#fff; padding:1px 4px; border-radius:3px; margin-right:4px;">🎈 漂流泡泡</span>`;
-    } else {
-      badgeHtml = item.type === 'week' ? 
-        `<span style="font-size:9px; background:#7E8F9F; color:#fff; padding:1px 4px; border-radius:3px; margin-right:4px;">W</span>` : 
-        `<span style="font-size:9px; background:#C2A675; color:#fff; padding:1px 4px; border-radius:3px; margin-right:4px;">D</span>`;
-    }
+    const displayNote = item.note ? `📝 ${item.note} (點擊可改)` : `📝 點擊添加備註...`;
+    const noteSpanHtml = `<span class="editable-note-span" id="note-pool-${item.id}">${escapeHtml(displayNote)}</span>`;
+    let badgeHtml = item.isBubble ? `<span style="font-size:9px; background:#C75D3D; color:#fff; padding:1px 4px; border-radius:3px; margin-right:4px;">🎈 漂流泡泡 (-5)</span>` : '';
 
     div.innerHTML = `
       <div style="display:flex; align-items:flex-start; padding-right:20px;">
-        <input type="checkbox" class="pool-main-lock" ${item.status === 'completed' ? 'checked' : ''} style="margin-right:6px; margin-top:3px;" ${item.type === 'week' ? 'disabled title="週計畫需等分配日全打勾才完結"' : ''}> 
         <div style="flex:1;">
           <span class="pool-item-text" style="${item.status === 'completed' ? 'text-decoration:line-through; color:var(--done);' : ''}">${badgeHtml}${escapeHtml(item.text)}</span>
-          ${noteHtml}
+          ${noteSpanHtml}
         </div>
       </div>
-      <button class="pool-item-del" style="position:absolute; right:8px; top:8px; border:none; background:transparent; color:var(--muted); cursor:pointer; font-size:16px;">×</button>
-      
-      ${item.type === 'week' && item.status !== 'completed' ? `
-        <div class="assign-checkboxes" style="margin-top:6px; border-top:1px dashed var(--line); padding-top:6px;">
-          <div style="margin-bottom:4px; font-size:11px; color:var(--muted);"> </div>
-          ${checkboxesHtml}
-          <div style="text-align:right; margin-top:6px;">
-            <button class="confirm-assign-btn" style="font-size:10px; border:none; background:var(--ink); color:var(--bg); border-radius:4px; padding:2px 8px; cursor:pointer;">分配</button>
-          </div>
-        </div>
-      ` : ''}
+      <button class="pool-item-del">×</button>
+      <div class="assign-checkboxes" style="margin-top:6px; border-top:1px dashed var(--line); padding-top:6px;">
+        ${checkboxesHtml} <button class="confirm-assign-btn" style="font-size:10px; border:none; background:var(--ink); color:var(--bg); border-radius:4px; padding:2px 5px; cursor:pointer;">分配指派</button>
+      </div>
     `;
 
-    // 日計畫可以在大池子勾選，雙向連動
-    if (item.type !== 'week') {
-      div.querySelector('.pool-main-lock').addEventListener('change', async (e) => {
-        const nextDone = e.target.checked;
-        await db.collection('users').doc(currentUser.uid).collection('pool').doc(item.id).update({ status: nextDone ? 'completed' : 'pending' });
-        
-        if (item.linkedDayStr && item.linkedTaskId) {
-          const current = getDayData(item.linkedDayStr);
-          const tasks = (current.tasks || []).map(t => t.id === item.linkedTaskId ? { ...t, done: nextDone } : t);
-          await db.collection('users').doc(currentUser.uid).collection('days').doc(item.linkedDayStr).set({ tasks }, { merge: true });
+    const noteSpanEl = div.querySelector(`#note-pool-${item.id}`);
+    noteSpanEl.dataset.rawNote = item.note || ''; enableInlineNoteEdit(noteSpanEl, item.id, 'pool');
+
+    div.querySelector('.confirm-assign-btn').addEventListener('click', async () => {
+      const checkedBoxes = div.querySelectorAll('.assign-check:checked');
+      const selectedDates = Array.from(checkedBoxes).map(cb => cb.value);
+      
+      // 先清空原本該 parentId 在那些天建立的舊複製任務，避免重複
+      for(let i=0; i<7; i++) {
+        const targetDStr = toDateStr(addDays(monday, i));
+        const dayData = getDayData(targetDStr);
+        if(dayData.tasks) {
+          const cleanTasks = dayData.tasks.filter(t => t.parentId !== item.id);
+          await db.collection('users').doc(currentUser.uid).collection('days').doc(targetDStr).set({ tasks: cleanTasks }, { merge: true });
         }
-      });
-    }
+      }
 
-    // 週計畫多選指派分流
-    if (item.type === 'week' && div.querySelector('.confirm-assign-btn')) {
-      div.querySelector('.confirm-assign-btn').addEventListener('click', async () => {
-        const checkedBoxes = div.querySelectorAll('.assign-check:checked');
-        const selectedDates = Array.from(checkedBoxes).map(cb => cb.value);
-        
-        if (selectedDates.length === 0) return alert('請先勾選想要分配的星期！');
-
-        await db.collection('users').doc(currentUser.uid).collection('pool').doc(item.id).update({
-          assignedDates: selectedDates
-        });
-
-        for (const chosenDate of selectedDates) {
-          await addTask(chosenDate, item.text, item.color || 'none', item.note || '', item.id);
-        }
-        
-        checkedBoxes.forEach(cb => cb.checked = false);
-        alert('多選複製指派成功！');
-      });
-    }
+      await db.collection('users').doc(currentUser.uid).collection('pool').doc(item.id).update({ assignedDates: selectedDates });
+      for (const chosenDate of selectedDates) {
+        await addDistributedTask(chosenDate, item.text, item.color || 'none', item.note || '', item.id);
+      }
+      alert('指派分配成功！');
+    });
 
     div.querySelector('.pool-item-del').addEventListener('click', async () => {
-      if(confirm('確定要刪除這個池子任務嗎？')) {
+      if(confirm('確定要刪除這個週計畫嗎？相關日指派也會取消。')) {
         await db.collection('users').doc(currentUser.uid).collection('pool').doc(item.id).delete();
       }
     });
@@ -1057,12 +778,191 @@ function renderPoolUI() {
   });
 }
 
+function renderWeekKanbanView() {
+  const monday = getMondayOfWeek(anchorDate);
+  const sunday = addDays(monday, 6);
+  document.getElementById('period-label').textContent = `${monday.getFullYear()}/${pad2(monday.getMonth()+1)}/${pad2(monday.getDate())} – ${pad2(sunday.getMonth()+1)}/${pad2(sunday.getDate())}`;
+
+  const container = document.getElementById('week-view'); container.innerHTML = '';
+  const today = new Date();
+
+  for (let i = 0; i < 7; i++) {
+    const d = addDays(monday, i); const dateStr = toDateStr(d);
+    const data = getDayData(dateStr); const tasks = data.tasks || []; const ledger = data.ledger || [];
+
+    const col = document.createElement('div'); col.className = 'kanban-col' + (isSameDay(d, today) ? ' is-today' : '');
+    
+    const header = document.createElement('div'); header.className = 'kanban-header';
+    header.innerHTML = `<span class="dow">${WEEKDAY_LABELS_SHORT[i]}</span><span class="num">${d.getDate()}</span>`;
+    header.addEventListener('click', () => openDayDetail(dateStr));
+
+    const taskListContainer = document.createElement('div'); taskListContainer.className = 'kanban-task-list';
+    taskListContainer.addEventListener('click', () => openDayDetail(dateStr));
+
+    if (tasks.length === 0) {
+      taskListContainer.innerHTML = `<div style="font-size:11px; color:var(--muted); font-style:italic; text-align:center; padding-top:10px;">未指派任務</div>`;
+    } else {
+      tasks.forEach(t => {
+        const item = document.createElement('div'); item.className = 'kanban-task-item' + (t.done ? ' done' : '') + (t.postponed ? ' postponed' : '');
+        item.style.borderLeftColor = MORANDI_COLORS[t.color || 'none'];
+        item.innerHTML = `<span class="dot-indicator"></span><span class="text-span">${escapeHtml(t.text)}${t.note ? ' 📝':''}${t.postponed ? ' 🕒':''}</span>`;
+        taskListContainer.appendChild(item);
+      });
+    }
+
+    // 🪙 底部記帳小卡摘要
+    const accountingSummaryDiv = document.createElement('div');
+    accountingSummaryDiv.className = 'kanban-accounting-summary';
+    accountingSummaryDiv.addEventListener('click', () => openDayDetail(dateStr));
+    
+    let dayTotalSpend = ledger.reduce((sum, item) => sum + (item.amount || 0), 0);
+    let badgesHtml = ledger.slice(0, 4).map(l => `<span class="accounting-badge">${l.category}:${l.amount}</span>`).join('');
+    if(ledger.length > 4) badgesHtml += `<span class="accounting-badge">...</span>`;
+
+    accountingSummaryDiv.innerHTML = `
+      <div class="accounting-badge-list">${badgesHtml || '<span style="color:var(--muted); font-style:italic; font-size:10px;">無記帳支出</span>'}</div>
+      <div class="accounting-total-label">${dayTotalSpend > 0 ? `減 $${dayTotalSpend}` : ''}</div>
+    `;
+
+    col.appendChild(header);
+    col.appendChild(taskListContainer);
+    col.appendChild(accountingSummaryDiv);
+    container.appendChild(col);
+  }
+}
+
+function renderMonthView() {
+  const year = anchorDate.getFullYear(); const month = anchorDate.getMonth();
+  document.getElementById('period-label').textContent = `${year} 年 ${month+1} 月`;
+  document.getElementById('month-dow-row').innerHTML = WEEKDAY_LABELS.map(l => `<div class="month-dow">${l}</div>`).join('');
+
+  const grid = document.getElementById('month-grid'); grid.innerHTML = '';
+  const firstOfMonth = new Date(year, month, 1); const startDate = getMondayOfWeek(firstOfMonth);
+  const lastOfMonth = new Date(year, month + 1, 0); const endDate = getMondayOfWeek(lastOfMonth);
+  const totalCells = Math.round((addDays(endDate,6) - startDate) / 86400000) + 1;
+  const today = new Date();
+
+  for (let i = 0; i < totalCells; i++) {
+    const d = addDays(startDate, i); const dateStr = toDateStr(d);
+    const data = getDayData(dateStr); const tasks = data.tasks || []; const ledger = data.ledger || [];
+    const outside = d.getMonth() !== month;
+
+    const cell = document.createElement('div'); cell.className = 'month-cell' + (outside ? ' outside' : '') + (isSameDay(d, today) ? ' is-today' : '');
+    
+    let dotsHtml = '';
+    if (tasks.length > 0) {
+      dotsHtml = '<div class="cell-dots">' + tasks.slice(0,5).map(t => `<span class="dot${t.done ? ' done' : ''}" style="background:${MORANDI_COLORS[t.color || 'red']}"></span>`).join('') + '</div>';
+    }
+    
+    let dayTotalSpend = ledger.reduce((sum, item) => sum + (item.amount || 0), 0);
+    const spendTagHtml = dayTotalSpend > 0 ? `<div class="expense-tag">$${dayTotalSpend}</div>` : '';
+
+    cell.innerHTML = `<span class="cell-num">${d.getDate()}</span>${spendTagHtml}${dotsHtml}`;
+    cell.addEventListener('click', () => openDayDetail(dateStr));
+    grid.appendChild(cell);
+  }
+}
+
 /* ============================================================
-   主要視圖控制與導覽
+   日詳情內嵌渲染 (任務勾選、記帳清單控制)
    ============================================================ */
+function openDayDetail(dateStr) { selectedDateStr = dateStr; renderDayDetail(dateStr); document.getElementById('day-detail').style.display = 'block'; document.getElementById('day-detail').scrollIntoView({ behavior:'smooth', block:'nearest' }); }
+document.getElementById('close-detail-btn').addEventListener('click', () => { document.getElementById('day-detail').style.display = 'none'; selectedDateStr = null; });
+
+function renderDayDetail(dateStr) {
+  const d = fromDateStr(dateStr);
+  document.getElementById('detail-date-label').textContent = `${d.getFullYear()}/${pad2(d.getMonth()+1)}/${pad2(d.getDate())}`;
+  document.getElementById('detail-dow-label').textContent = WEEKDAY_LABELS_SHORT[(d.getDay() + 6) % 7];
+
+  const data = getDayData(dateStr);
+  
+  // 1. 渲染分配進來的任務
+  const tasks = data.tasks || []; const list = document.getElementById('task-list'); list.innerHTML = '';
+  if (tasks.length === 0) {
+    list.innerHTML = `<div style="font-size:12px; color:var(--muted); font-style:italic; padding:6px 0;">今日無分配的週計畫任務。可到左側大池子指派過來。</div>`;
+  } else {
+    tasks.forEach(t => {
+      const item = document.createElement('div'); item.className = 'task-item';
+      item.style.borderLeft = `3px solid ${MORANDI_COLORS[t.color || 'none']}`; paddingLeft = '6px';
+      
+      const displayNote = t.note ? `📝 ${t.note} (點擊編輯)` : `📝 點擊添加備註...`;
+      const noteSpanHtml = `<span class="editable-note-span" id="note-day-${t.id}">${escapeHtml(displayNote)}</span>`;
+      const postponeBtnHtml = (!t.done && !t.postponed) ? `<button class="postpone-btn" id="postpone-btn-${t.id}">🕒 明天再做 (-3)</button>` : '';
+
+      item.innerHTML = `
+        <div class="task-checkbox${t.done ? ' checked' : ''}"></div>
+        <div style="flex:1; margin-left:6px;">
+          <div class="task-text${t.done ? ' done' : ''}${t.postponed ? ' postponed' : ''}">${escapeHtml(t.text)} ${postponeBtnHtml}</div>
+          ${noteSpanHtml}
+        </div>
+        <button class="task-del">×</button>
+      `;
+      
+      item.querySelector('.task-checkbox').addEventListener('click', () => { if(!t.postponed) toggleTask(dateStr, t.id); });
+      item.querySelector('.task-del').addEventListener('click', () => deleteTask(dateStr, t.id));
+      if (postponeBtnHtml) {
+        item.querySelector(`#postpone-btn-${t.id}`).addEventListener('click', (e) => { e.stopPropagation(); postponeTaskToTomorrow(dateStr, t.id); });
+      }
+
+      const noteSpanEl = item.querySelector(`#note-day-${t.id}`);
+      noteSpanEl.dataset.rawNote = t.note || ''; enableInlineNoteEdit(noteSpanEl, t.id, 'days', dateStr, t.id);
+      list.appendChild(item);
+    });
+  }
+
+  // 2. 🪙 渲染今日記帳列表
+  const ledger = data.ledger || []; const ledgerListEl = document.getElementById('ledger-list'); ledgerListEl.innerHTML = '';
+  let totalSpend = ledger.reduce((sum, item) => sum + (item.amount || 0), 0);
+  document.getElementById('detail-day-spend-total').textContent = `共 $${totalSpend}`;
+
+  if(ledger.length === 0) {
+    ledgerListEl.innerHTML = `<div style="font-size:11px; color:var(--muted); font-style:italic;">本日無支出記帳項目。</div>`;
+  } else {
+    ledger.forEach(item => {
+      const ledgDiv = document.createElement('div'); ledgDiv.className = 'ledger-item';
+      ledgDiv.innerHTML = `<span><strong>[${escapeHtml(item.category)}]</strong> $${item.amount}</span><button class="del-ledg">×</button>`;
+      ledgDiv.querySelector('.del-ledg').addEventListener('click', () => deleteLedgerItem(item.id));
+      ledgerListEl.appendChild(ledgDiv);
+    });
+  }
+
+  // 3. 備份日記
+  const textarea = document.getElementById('diary-textarea');
+  if (document.activeElement !== textarea) textarea.value = data.diary || '';
+  document.getElementById('save-indicator').textContent = '';
+}
+
+/* 點擊記帳事件觸發 */
+document.getElementById('add-ledger-btn').addEventListener('click', addLedgerItem);
+document.getElementById('ledger-amount').addEventListener('keydown', (e) => { if (e.key === 'Enter') addLedgerItem(); });
+
+/* 自動儲存小日記 */
+document.getElementById('diary-textarea').addEventListener('input', e => { if (!selectedDateStr) return; scheduleDiarySave(selectedDateStr, e.target.value); });
+function scheduleDiarySave(dateStr, text) {
+  clearTimeout(diarySaveTimer); const indicator = document.getElementById('save-indicator'); indicator.textContent = '自動儲存中···';
+  diarySaveTimer = setTimeout(async () => {
+    await db.collection('users').doc(currentUser.uid).collection('days').doc(dateStr).set({ diary: text }, { merge: true });
+    indicator.textContent = '已儲存 ✓';
+  }, 800);
+}
+
+/* 自動儲存月目標 */
+document.getElementById('month-goal-input').addEventListener('input', (e) => {
+  clearTimeout(monthGoalTimer); const mStr = toMonthStr(anchorDate); const indicator = document.getElementById('month-goal-indicator'); indicator.textContent = '同步中...';
+  monthGoalTimer = setTimeout(async () => {
+    await db.collection('users').doc(currentUser.uid).collection('months').doc(mStr).set({ goal: e.target.value }, { merge: true });
+    indicator.textContent = '儲存成功'; setTimeout(() => { indicator.textContent = ''; }, 1500);
+  }, 800);
+});
+
+function updateMonthGoalUI() {
+  const mStr = toMonthStr(anchorDate); const tx = document.getElementById('month-goal-input');
+  if (document.activeElement !== tx) { tx.value = (monthsMeta[mStr] && monthsMeta[mStr].goal) ? monthsMeta[mStr].goal : ''; }
+}
+
+/* 視圖切換切換與點擊 */
 document.getElementById('btn-week-view').addEventListener('click', () => switchView('week'));
 document.getElementById('btn-month-view').addEventListener('click', () => switchView('month'));
-
 function switchView(view) {
   currentView = view;
   document.getElementById('btn-week-view').classList.toggle('active', view === 'week');
@@ -1071,220 +971,56 @@ function switchView(view) {
   document.getElementById('month-view').style.display = view === 'month' ? 'block' : 'none';
   renderCurrentView();
 }
-
-document.getElementById('nav-prev').addEventListener('click', () => {
-  anchorDate = currentView === 'week' ? addDays(anchorDate, -7) : addMonths(anchorDate, -1);
-  renderCurrentView();
-});
-document.getElementById('nav-next').addEventListener('click', () => {
-  anchorDate = currentView === 'week' ? addDays(anchorDate, 7) : addMonths(anchorDate, 1);
-  renderCurrentView();
-});
-document.getElementById('nav-today').addEventListener('click', () => {
-  anchorDate = new Date();
-  renderCurrentView();
-});
+document.getElementById('nav-prev').addEventListener('click', () => { anchorDate = currentView === 'week' ? addDays(anchorDate, -7) : addMonths(anchorDate, -1); renderCurrentView(); });
+document.getElementById('nav-next').addEventListener('click', () => { anchorDate = currentView === 'week' ? addDays(anchorDate, 7) : addMonths(anchorDate, 1); renderCurrentView(); });
+document.getElementById('nav-today').addEventListener('click', () => { anchorDate = new Date(); renderCurrentView(); });
 
 function renderCurrentView() {
   if (!currentUser) return;
-  updateMonthGoalUI();
-  updateWeekTitleUI();
-  
-  // 檢查跨週未完成泡泡
+  updateMonthGoalUI(); updateWeekTitleUI();
   checkAndCarryOverBubbles();
   renderPoolUI(); 
-
-  if (currentView === 'week') renderWeekKanbanView();
-  else renderMonthView();
+  updateGlobalStatsUI();
+  if (currentView === 'week') renderWeekKanbanView(); else renderMonthView();
 }
 
-/* ============================================================
-   橫向並排手帳看板
-   ============================================================ */
-function renderWeekKanbanView() {
-  const monday = getMondayOfWeek(anchorDate);
-  const sunday = addDays(monday, 6);
-  document.getElementById('period-label').textContent =
-    `${monday.getFullYear()}/${pad2(monday.getMonth()+1)}/${pad2(monday.getDate())} – ${pad2(sunday.getMonth()+1)}/${pad2(sunday.getDate())}`;
-
-  const container = document.getElementById('week-view');
-  container.innerHTML = '';
-  const today = new Date();
-
-  for (let i = 0; i < 7; i++) {
-    const d = addDays(monday, i);
-    const dateStr = toDateStr(d);
-    const data = getDayData(dateStr);
-    const tasks = data.tasks || [];
-
-    const col = document.createElement('div');
-    col.className = 'kanban-col' + (isSameDay(d, today) ? ' is-today' : '');
-    
-    const header = document.createElement('div');
-    header.className = 'kanban-header';
-    header.innerHTML = `<span class="dow">${WEEKDAY_LABELS_SHORT[i]}</span><span class="num">${d.getDate()}</span>`;
-    header.addEventListener('click', () => openDayDetail(dateStr));
-
-    const taskListContainer = document.createElement('div');
-    taskListContainer.className = 'kanban-task-list';
-    taskListContainer.addEventListener('click', () => openDayDetail(dateStr));
-
-    if (tasks.length === 0) {
-      taskListContainer.innerHTML = `<div style="font-size:11px; color:var(--muted); font-style:italic; text-align:center; padding-top:10px;">無事項</div>`;
-    } else {
-      tasks.forEach(t => {
-        const item = document.createElement('div');
-        item.className = 'kanban-task-item' + (t.done ? ' done' : '');
-        item.style.borderLeftColor = MORANDI_COLORS[t.color || 'none'];
-        const noteBadge = t.note ? ' 📝' : '';
-        item.innerHTML = `<span class="dot-indicator"></span><span class="text-span">${escapeHtml(t.text)}${noteBadge}</span>`;
-        taskListContainer.appendChild(item);
-      });
-    }
-
-    col.appendChild(header);
-    col.appendChild(taskListContainer);
-
-    if (data.diary && data.diary.trim()) {
-      const diaryFlag = document.createElement('div');
-      diaryFlag.className = 'kanban-diary-flag';
-      diaryFlag.textContent = '✍️ 有日記';
-      col.appendChild(diaryFlag);
-    }
-
-    container.appendChild(col);
-  }
-}
-
-/* ============================================================
-   月計畫傳統網格檢視
-   ============================================================ */
-function renderMonthView() {
-  const year = anchorDate.getFullYear();
-  const month = anchorDate.getMonth();
-  document.getElementById('period-label').textContent = `${year} 年 ${month+1} 月`;
-
-  const dowRow = document.getElementById('month-dow-row');
-  dowRow.innerHTML = WEEKDAY_LABELS.map(l => `<div class="month-dow">${l}</div>`).join('');
-
-  const grid = document.getElementById('month-grid');
-  grid.innerHTML = '';
-
-  const firstOfMonth = new Date(year, month, 1);
-  const startDate = getMondayOfWeek(firstOfMonth);
-  const lastOfMonth = new Date(year, month + 1, 0);
-  const endDate = getMondayOfWeek(lastOfMonth);
-  const totalCells = Math.round((addDays(endDate,6) - startDate) / 86400000) + 1;
-
-  const today = new Date();
-
-  for (let i = 0; i < totalCells; i++) {
-    const d = addDays(startDate, i);
-    const dateStr = toDateStr(d);
-    const data = getDayData(dateStr);
-    const tasks = data.tasks || [];
-    const outside = d.getMonth() !== month;
-
-    const cell = document.createElement('div');
-    cell.className = 'month-cell' + (outside ? ' outside' : '') + (isSameDay(d, today) ? ' is-today' : '');
-    cell.dataset.date = dateStr;
-
-    let dotsHtml = '';
-    if (tasks.length > 0) {
-      dotsHtml = '<div class="cell-dots">' +
-        tasks.slice(0,6).map(t => `<span class="dot${t.done ? ' done' : ''}" style="background:${MORANDI_COLORS[t.color || 'red']}"></span>`).join('') +
-        '</div>';
-    }
-    const diaryMark = (data.diary && data.diary.trim()) ? '<div class="diary-mark" title="今日有日記"></div>' : '';
-
-    cell.innerHTML = `<span class="cell-num">${d.getDate()}</span>${diaryMark}${dotsHtml}`;
-    cell.addEventListener('click', () => openDayDetail(dateStr));
-    grid.appendChild(cell);
-  }
-}
-
-/* ============================================================
-   單日詳情彈出卡卡片
-   ============================================================ */
-function openDayDetail(dateStr) {
-  selectedDateStr = dateStr;
-  renderDayDetail(dateStr);
-  document.getElementById('day-detail').style.display = 'block';
-  document.getElementById('day-detail').scrollIntoView({ behavior:'smooth', block:'nearest' });
-}
-
-document.getElementById('close-detail-btn').addEventListener('click', () => {
-  document.getElementById('day-detail').style.display = 'none';
-  selectedDateStr = null;
+/* 週計畫名字更動 */
+const editWeekBtn = document.getElementById('week-title-edit-btn');
+const weekTitleText = document.getElementById('week-title-text');
+const weekTitleInput = document.getElementById('week-title-input');
+editWeekBtn.addEventListener('click', () => {
+  if (weekTitleInput.style.display === 'none' || weekTitleInput.style.display === '') {
+    weekTitleInput.style.display = 'inline-block'; weekTitleText.style.display = 'none';
+    weekTitleInput.value = weekTitleText.textContent === '點擊命名' ? '' : weekTitleText.textContent;
+    weekTitleInput.focus(); editWeekBtn.textContent = '💾';
+  } else { saveWeekTitle(); }
 });
-
-function renderDayDetail(dateStr) {
-  const d = fromDateStr(dateStr);
-  const dow = (d.getDay() + 6) % 7; 
-  document.getElementById('detail-date-label').textContent =
-    `${d.getFullYear()}/${pad2(d.getMonth()+1)}/${pad2(d.getDate())}`;
-  document.getElementById('detail-dow-label').textContent = WEEKDAY_LABELS_SHORT[dow];
-
-  const data = getDayData(dateStr);
-  const tasks = data.tasks || [];
-
-  const list = document.getElementById('task-list');
-  list.innerHTML = '';
-  if (tasks.length === 0) {
-    list.innerHTML = `<div style="font-size:13px; color:var(--muted); padding:10px 0;">這天還沒有任何待辦事項。</div>`;
-  } else {
-    tasks.forEach(t => {
-      const item = document.createElement('div');
-      item.className = 'task-item';
-      item.style.borderLeftColor = MORANDI_COLORS[t.color || 'none'];
-      const noteStr = t.note ? `<div style="font-size:11px; color:var(--muted); margin-top:2px; font-style:italic;">📝 ${escapeHtml(t.note)}</div>` : '';
-      item.innerHTML = `
-        <div class="task-checkbox${t.done ? ' checked' : ''}"></div>
-        <div style="flex:1;">
-          <div class="task-text${t.done ? ' done' : ''}">${escapeHtml(t.text)}</div>
-          ${noteStr}
-        </div>
-        <button class="task-del">×</button>
-      `;
-      item.querySelector('.task-checkbox').addEventListener('click', () => toggleTask(dateStr, t.id));
-      item.querySelector('.task-del').addEventListener('click', () => deleteTask(dateStr, t.id));
-      list.appendChild(item);
-    });
-  }
-
-  const textarea = document.getElementById('diary-textarea');
-  if (document.activeElement !== textarea) {
-    textarea.value = data.diary || '';
-  }
-  document.getElementById('save-indicator').textContent = '';
+weekTitleInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') saveWeekTitle(); });
+async function saveWeekTitle() {
+  const wId = getWeekIdentifier(anchorDate); const val = weekTitleInput.value.trim();
+  await db.collection('users').doc(currentUser.uid).collection('weeks').doc(wId).set({ title: val });
+  weekTitleInput.style.display = 'none'; weekTitleText.style.display = 'inline-block'; editWeekBtn.textContent = '✏️';
+}
+function updateWeekTitleUI() {
+  const wId = getWeekIdentifier(anchorDate);
+  weekTitleText.textContent = (weeksMeta[wId] && weeksMeta[wId].title) ? weeksMeta[wId].title : '點擊命名';
 }
 
-document.getElementById('add-task-btn').addEventListener('click', submitNewTask);
-document.getElementById('new-task-input').addEventListener('keydown', e => { if (e.key === 'Enter') submitNewTask(); });
-
-function submitNewTask() {
-  const input = document.getElementById('new-task-input');
-  const noteInput = document.getElementById('new-task-note');
-  if (!selectedDateStr || !input.value.trim()) return;
-  
-  addTask(selectedDateStr, input.value, selectedDetailColor, noteInput.value.trim());
-  input.value = '';
-  noteInput.value = '';
-}
-
-document.getElementById('diary-textarea').addEventListener('input', e => {
-  if (!selectedDateStr) return;
-  scheduleDiarySave(selectedDateStr, e.target.value);
-});
-
-/* ============================================================
-   Service Worker (PWA 離線支援)
-   ============================================================ */
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(err => console.warn('SW 註冊失敗:', err));
+/* 池子大目標注入 */
+document.getElementById('pool-task-add-btn').addEventListener('click', addPoolItem);
+document.getElementById('pool-task-input').addEventListener('keydown', (e) => { if(e.key==='Enter') addPoolItem(); });
+async function addPoolItem() {
+  const input = document.getElementById('pool-task-input'); const noteInput = document.getElementById('pool-task-note');
+  const txt = input.value.trim(); const noteTxt = noteInput.value.trim(); if(!txt) return;
+  const wId = getWeekIdentifier(anchorDate);
+  await db.collection('users').doc(currentUser.uid).collection('pool').add({
+    text: txt, color: selectedPoolColor, note: noteTxt, type: 'week', status: 'pending', weekId: wId, assignedDates: [],
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
   });
+  input.value = ''; noteInput.value = '';
 }
+
+if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(err => console.warn(err)); }); }
 </script>
 </body>
 </html>
