@@ -665,12 +665,13 @@ function attachFirestoreListeners() {
     updateMonthGoalUI();
   });
 
-  // 4. 監聽本週池
-  unsubscribePool = userDocRef.collection('pool').order('createdAt', 'asc').onSnapshot(snapshot => {
+  // 4. 監聽本週池（修正版）
+  unsubscribePool = userDocRef.collection('pool').onSnapshot(snapshot => {
     globalPool = [];
     snapshot.forEach(doc => {
       globalPool.push({ id: doc.id, ...doc.data() });
     });
+    globalPool.sort((a, b) => a.id.localeCompare(b.id)); 
     renderPoolUI();
   });
 }
