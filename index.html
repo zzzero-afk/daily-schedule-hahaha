@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0">
+<title>P人消滅計畫</title>
+
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#FAF8F5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="P人自有妙計">
+<link rel="apple-touch-icon" href="icon-192.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#FAF8F5;
+    --ink:#2B2825;
+    --muted:#8C8579;
+    --accent:#C75D3D;
+    --accent-soft:#EADDD6;
+    --done:#B8B2A6;
+    --line:#E8E3DA;
+    --card:#FFFFFF;
+    --radius:14px;
+    --shadow:0 2px 10px rgba(43,40,37,0.05);
+
+    /* 莫蘭迪大地色系標籤庫 */
+    --tag-none: #E8E3DA;
+    --tag-red: #B87D73;    /* 煙燻紅 */
+    --tag-green: #8A9A86;  /* 鼠尾草綠 */
+    --tag-blue: #7E8F9F;   /* 迷霧藍 */
+    --tag-yellow: #C2A675; /* 芥末黃 */
+    --tag-purple:  #9E8EAD;  /* 薰衣草紫 */
+    --tag-gray: #9FA09E;   /* 黏土灰 */
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Noto Sans TC', sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  h1,h2,h3{font-family:'Noto Serif TC', serif; margin:0;}
+  button, input, select, textarea{font-family:inherit;}
+
+  /* ---------- 登入畫面 ---------- */
+  #login-screen{
+    position:fixed; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:28px; background:var(--bg); z-index:100; padding:24px; text-align:center;
+  }
+  #login-screen .brand-mark{
+    font-family:'Noto Serif TC', serif;
+    font-size:15px; letter-spacing:0.4em; color:var(--muted);
+  }
+  #login-screen h1{font-size:32px; font-weight:700;}
+  #login-screen p{color:var(--muted); font-size:14px; max-width:280px; line-height:1.7; margin:0;}
+  .google-btn{
+    display:flex; align-items:center; gap:10px;
+    background:var(--card); border:1px solid var(--line); border-radius:999px;
+    padding:13px 26px; font-size:15px; font-weight:500; color:var(--ink);
+    cursor:pointer; box-shadow:var(--shadow); transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .google-btn:hover{transform:translateY(-1px); box-shadow:0 4px 14px rgba(43,40,37,0.09);}
+  .google-btn svg{width:18px; height:18px;}
+  #login-error{color:var(--accent); font-size:13px; min-height:18px;}
+
+  /* ---------- App Shell ---------- */
+  #app{display:none; max-width:1400px; margin:0 auto; padding:18px 24px 80px;}
+  #app.visible{display:block;}
+
+  header.topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:6px 2px 18px; gap:10px; border-bottom:1px solid var(--line);
+    margin-bottom:20px;
+  }
+  .topbar-left{display:flex; align-items:baseline; gap:10px;}
+  .topbar-left .eyebrow{font-size:11px; letter-spacing:0.25em; color:var(--muted); font-weight:500;}
+  .topbar-left h1{font-size:22px;}
+  .topbar-right{display:flex; align-items:center; gap:10px;}
+  #user-avatar{width:30px; height:30px; border-radius:50%; border:1px solid var(--line); cursor:pointer;}
+  #logout-btn{
+    border:none; background:none; color:var(--muted); font-size:12px; cursor:pointer;
+    text-decoration:underline; padding:4px;
+  }
+
+  /* 控制列 */
+  .control-row {
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:20px; flex-wrap:wrap; gap:14px;
+  }
+
+  .view-switch{
+    display:flex; background:var(--card); border:1px solid var(--line); border-radius:999px;
+    padding:3px; gap:2px; width:fit-content;
+  }
+  .view-switch button{
+    border:none; background:none; padding:7px 18px; border-radius:999px; font-size:13px;
+    color:var(--muted); cursor:pointer; transition:all .15s ease; font-weight:500;
+  }
+  .view-switch button.active{background:var(--ink); color:var(--bg);}
+
+  .nav-row{display:flex; align-items:center; gap:10px; flex-wrap:nowrap;}
+  .nav-row button{
+    border:none; background:none; color:var(--muted); cursor:pointer;
+    width:30px; height:30px; border-radius:50%; font-size:16px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .nav-row button:hover{background:var(--accent-soft); color:var(--accent);}
+  .nav-row .period-label{font-size:16px; font-weight:500; min-width:130px; text-align:center; font-family:'Noto Serif TC',serif;}
+  .today-btn{
+    font-size:11px; color:var(--accent); border:1px solid var(--accent-soft); background:var(--accent-soft);
+    border-radius:999px; padding:3px 11px; cursor:pointer; white-space:nowrap;
+  }
+
+  /* 自訂週標題編輯 */
+  .week-title-area {
+    display: flex; align-items: center; gap: 8px; background: var(--card);
+    border: 1px solid var(--line); padding: 4px 12px; border-radius: 8px;
+  }
+  .week-title-display { font-size: 13.5px; font-weight: 500; color: var(--ink); }
+  .week-title-input {
+    border: none; background: transparent; font-size: 13.5px; color: var(--ink);
+    outline: none; width: 140px; display: none;
+  }
+  .week-title-btn {
+    border: none; background: transparent; color: var(--muted); cursor: pointer;
+    font-size: 12px; padding: 2px;
+  }
+  .week-title-btn:hover { color: var(--accent); }
+
+  /* ---------- 主版面雙欄架構 ---------- */
+  .workspace-layout {
+    display: grid; grid-template-columns: 300px 1fr; gap: 24px; align-items: start;
+  }
+
+  /* 左側：大目標與週池 */
+  .side-panel { display: flex; flex-direction: column; gap: 20px; }
+  .panel-card {
+    background: var(--card); border-radius: var(--radius); border: 1px solid var(--line);
+    box-shadow: var(--shadow); padding: 18px;
+  }
+  .panel-card h3 { font-size: 15px; margin-bottom: 12px; border-left: 3px solid var(--ink); padding-left: 8px; color: var(--ink); }
+  
+  .month-goal-textarea {
+    width: 100%; min-height: 80px; border: 1px solid var(--line); border-radius: 8px;
+    padding: 10px; font-size: 13.5px; background: var(--bg); color: var(--ink);
+    resize: none; line-height: 1.5; outline: none;
+  }
+  .month-goal-textarea:focus { border-color: var(--muted); }
+
+  /* 色彩選取小點 */
+  .color-picker { display: flex; gap: 6px; margin-bottom: 8px; align-items: center; }
+  .color-dot {
+    width: 14px; height: 14px; border-radius: 50%; cursor: pointer;
+    border: 2px solid transparent; transition: transform 0.1s ease;
+  }
+  .color-dot.active { transform: scale(1.2); border-color: var(--ink); }
+
+  .pool-input-row { display: flex; gap: 6px; margin-bottom: 12px; }
+  .pool-input-row input {
+    flex: 1; border: 1px solid var(--line); border-radius: 6px; padding: 7px 10px;
+    font-size: 13px; background: var(--bg); color: var(--ink); outline: none;
+  }
+  .pool-input-row button {
+    border: none; background: var(--ink); color: var(--bg); padding: 0 12px;
+    font-size: 13px; border-radius: 6px; cursor: pointer;
+  }
+  .pool-input-row button:hover { background: var(--accent); }
+
+  .pool-list { display: flex; flex-direction: column; gap: 8px; }
+  .pool-item {
+    background: var(--bg); padding: 8px 10px; border-radius: 8px;
+    display: flex; flex-direction: column; gap: 6px; font-size: 13px;
+    border-left: 4px solid var(--tag-none); position: relative;
+  }
+  .pool-item-text { word-break: break-word; line-height: 1.4; padding-right: 20px; }
+  .pool-item-del {
+    position: absolute; right: 6px; top: 6px; border: none; background: transparent;
+    color: var(--muted); cursor: pointer; font-size: 14px; padding: 2px; opacity: 0.5;
+  }
+  .pool-item:hover .pool-item-del { opacity: 1; }
+  
+  .assign-row { display: flex; align-items: center; gap: 4px; margin-top: 2px; }
+  .assign-select {
+    font-size: 11px; border: 1px solid var(--line); background: var(--card);
+    border-radius: 4px; color: var(--muted); padding: 2px 4px; outline: none; cursor: pointer;
+  }
+
+  /* 右側：週檢視改成「橫向看板」 */
+  .week-kanban {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; align-items: start;
+  }
+  .kanban-col {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    box-shadow: var(--shadow); min-height: 450px; display: flex; flex-direction: column;
+    padding: 12px 10px; transition: border-color 0.15s ease;
+  }
+  .kanban-col.is-today { border: 1.5px solid var(--accent); background: #FAF9F6; }
+  
+  .kanban-header {
+    text-align: center; border-bottom: 1px solid var(--line); padding-bottom: 8px;
+    margin-bottom: 10px; cursor: pointer;
+  }
+  .kanban-header .dow { font-size: 11px; color: var(--muted); display: block; margin-bottom: 2px; font-weight: 500; }
+  .kanban-header .num { font-size: 16px; font-weight: 700; font-family: 'Noto Serif TC', serif; }
+  .kanban-col.is-today .kanban-header .num {
+    color: var(--bg); background: var(--accent); border-radius: 50%;
+    width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center;
+  }
+
+  .kanban-task-list { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+  .kanban-task-item {
+    background: var(--bg); padding: 7px 8px; border-radius: 8px; font-size: 12.5px;
+    display: flex; gap: 6px; align-items: flex-start; border-left: 3px solid var(--tag-none);
+    cursor: pointer;
+  }
+  .kanban-task-item.done { opacity: 0.55; }
+  .kanban-task-item .dot-indicator { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); margin-top: 6px; flex-shrink: 0; }
+  .kanban-task-item.done .dot-indicator { background: var(--done); }
+  .kanban-task-item .text-span { flex: 1; word-break: break-word; line-height: 1.35; }
+  .kanban-task-item.done .text-span { text-decoration: line-through; color: var(--done); }
+
+  .kanban-diary-flag {
+    margin-top: auto; padding-top: 8px; font-size: 11px; color: var(--accent);
+    text-align: right; font-style: italic; opacity: 0.8;
+  }
+
+  /* ---------- 月檢視 ---------- */
+  .month-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:6px;}
+  .month-dow{text-align:center; font-size:11px; color:var(--muted); padding-bottom:6px;}
+  .month-cell{
+    aspect-ratio:1/1; border-radius:10px; border:1px solid var(--line); background:var(--card);
+    padding:6px 5px; cursor:pointer; display:flex; flex-direction:column; gap:3px;
+    transition:background .12s ease, border-color .12s ease; position:relative; overflow:hidden;
+  }
+  .month-cell:hover{border-color:var(--accent-soft);}
+  .month-cell.outside{opacity:0.32;}
+  .month-cell .cell-num{font-size:12.5px; font-weight:500; font-family:'Noto Serif TC',serif;}
+  .month-cell.is-today{border-color:var(--accent); background:var(--accent-soft);}
+  .month-cell.is-today .cell-num{color:var(--accent); font-weight:700;}
+  .month-cell .cell-dots{display:flex; gap:2px; flex-wrap:wrap; margin-top:auto;}
+  .month-cell .dot{width:4px; height:4px; border-radius:50%; background:var(--accent);}
+  .month-cell .dot.done{background:var(--done);}
+  .month-cell .diary-mark{
+    position:absolute; top:5px; right:6px; width:5px; height:5px; border-radius:50%;
+    background:var(--ink); opacity:0.3;
+  }
+
+  /* ---------- 日期詳情彈出卡 ---------- */
+  #day-detail{display:none; margin-top:24px;}
+  #day-detail.visible{display:block;}
+  .detail-card{
+    background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow);
+    border-left:4px solid var(--accent); padding:20px 22px; position:relative; border-top: 1px solid var(--line);
+  }
+  .detail-card .detail-head{
+    display:flex; align-items:baseline; justify-content:space-between; margin-bottom:16px;
+  }
+  .detail-card .detail-date{font-size:18px; font-family:'Noto Serif TC',serif; font-weight:700;}
+  .detail-card .detail-sub{font-size:12px; color:var(--muted); margin-left:8px;}
+  .close-detail{border:none; background:none; color:var(--muted); font-size:24px; cursor:pointer; line-height:1; padding:2px 6px;}
+
+  .task-list{margin-bottom:18px;}
+  .task-item{
+    display:flex; align-items:flex-start; gap:10px; padding:8px 0; font-size:14.5px;
+    border-left: 3px solid transparent; padding-left: 6px; margin-bottom:4px;
+  }
+  .task-checkbox{
+    flex:0 0 auto; width:19px; height:19px; border-radius:5px; border:1.5px solid var(--line);
+    cursor:pointer; margin-top:1px; display:flex; align-items:center; justify-content:center;
+    transition:all .12s ease; background:var(--card);
+  }
+  .task-checkbox.checked{background:var(--accent); border-color:var(--accent);}
+  .task-checkbox.checked::after{
+    content:''; width:9px; height:6px; border-left:2px solid white; border-bottom:2px solid white;
+    transform:rotate(-45deg) translate(0,-1px);
+  }
+  .task-text{flex:1; word-break:break-word; line-height:1.5; padding-top:0.5px;}
+  .task-text.done{color:var(--done); text-decoration:line-through;}
+  .task-del{
+    border:none; background:none; color:var(--muted); opacity:0; cursor:pointer; font-size:16px;
+    padding:0 6px; transition:opacity .12s ease;
+  }
+  .task-item:hover .task-del{opacity:0.6;}
+  .task-del:hover{opacity:1 !important; color:var(--accent);}
+
+  .add-task-row{display:flex; flex-direction:column; gap:8px; margin-top:10px; background:var(--bg); padding:10px; border-radius:8px;}
+  .input-main-line { display:flex; gap:8px; }
+  .add-task-row input{
+    flex:1; border:1px solid var(--line); border-radius:6px; padding:8px 12px; font-size:14px;
+    background:var(--card); color:var(--ink); outline:none;
+  }
+  .add-task-row input:focus{border-color:var(--accent);}
+  .add-task-row button{
+    border:none; background:var(--ink); color:var(--bg); border-radius:6px; padding:8px 16px;
+    font-size:14px; cursor:pointer; font-weight:500;
+  }
+  .add-task-row button:hover{background:var(--accent);}
+
+  .diary-section label{
+    font-size:11.5px; letter-spacing:0.15em; color:var(--muted); font-weight:500; display:block; margin-bottom:6px;
+  }
+  .diary-section textarea{
+    width:100%; min-height:110px; border:1px solid var(--line); border-radius:10px;
+    padding:12px 14px; font-size:14px; line-height:1.6; resize:vertical;
+    background:var(--bg); color:var(--ink); outline:none;
+  }
+  .diary-section textarea:focus{border-color:var(--accent);}
+  .save-indicator{font-size:11px; color:var(--muted); margin-top:6px; height:14px;}
+
+  /* ---------- 載入中 ---------- */
+  #loading-screen{
+    position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center;
+    z-index:200; color:var(--muted); font-size:13px; letter-spacing:0.1em;
+  }
+
+  /* RWD 板塊優化：小螢幕自動切回好閱讀的垂直直排 */
+  @media (max-width:1024px){
+    .workspace-layout { grid-template-columns: 1fr; }
+    .week-kanban { grid-template-columns: repeat(4, 1fr); }
+  }
+  @media (max-width:680px){
+    .week-kanban { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width:480px){
+    .week-kanban { grid-template-columns: 1fr; }
+    .detail-card{padding:16px;}
+  }
+</style>
+</head>
+<body>
+
+<div id="loading-screen">載入中 ···</div>
+
+<div id="login-screen" style="display:none;">
+  <div class="brand-mark">JOURNAL · PLANNER</div>
+  <h1>P人消滅計畫</h1>
+  <p>procrastination<br>noun [U]<br>We need decisive action</p>
+  <button class="google-btn" id="google-login-btn">
+    <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.9 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.5 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 16 19 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.5 29.6 4 24 4c-7.4 0-13.8 4.2-17 10.7z"/><path fill="#4CAF50" d="M24 44c5.4 0 10.3-2.1 14-5.5l-6.5-5.4C29.4 35 26.8 36 24 36c-5.3 0-9.7-3.1-11.3-7.6l-6.6 5.1C9.9 39.7 16.4 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-1.1 3.1-3.4 5.6-6.3 7.1l6.5 5.4C39.5 37.2 44 31.5 44 24c0-1.3-.1-2.7-.4-3.5z"/></svg>
+    使用 Google 帳號登入
+  </button>
+  <div id="login-error"></div>
+</div>
+
+<div id="app">
+  <header class="topbar">
+    <div class="topbar-left">
+      <span class="eyebrow">KANBAN JOURNAL</span>
+      <h1>P人自有妙計</h1>
+    </div>
+    <div class="topbar-right">
+      <img id="user-avatar" src="" alt="使用者">
+      <button id="logout-btn">登出</button>
+    </div>
+  </header>
+
+  <div class="control-row">
+    <div class="view-switch">
+      <button id="btn-week-view" class="active">週計畫</button>
+      <button id="btn-month-view">月計畫</button>
+    </div>
+
+    <div class="nav-row">
+      <button id="nav-prev">‹</button>
+      <span class="period-label" id="period-label">—</span>
+      <button id="nav-next">›</button>
+      <button class="today-btn" id="nav-today">今天</button>
+    </div>
+
+    <div class="week-title-area" id="week-title-container">
+      <span class="week-title-display" id="week-title-text">點擊命名</span>
+      <input type="text" class="week-title-input" id="week-title-input" placeholder="例：開學週">
+      <button class="week-title-btn" id="week-title-edit-btn">✏️</button>
+    </div>
+  </div>
+
+  <div class="workspace-layout">
+    
+    <div class="side-panel">
+      <div class="panel-card">
+        <h3>本月目標</h3>
+        <textarea class="month-goal-textarea" id="month-goal-input" placeholder="寫下這個月的核心目標與願景 ···"></textarea>
+        <div class="save-indicator" id="month-goal-indicator" style="font-size:11px; color:var(--muted); text-align:right;"></div>
+      </div>
+
+      <div class="panel-card">
+        <h3>本週計畫</h3>
+        <div class="color-picker">
+          <span style="font-size:11px; color:var(--muted); margin-right:4px;">標籤:</span>
+          <div class="color-dot active" data-color="none" style="background:var(--tag-none)"></div>
+          <div class="color-dot" data-color="red" style="background:var(--tag-red)"></div>
+          <div class="color-dot" data-color="green" style="background:var(--tag-green)"></div>
+          <div class="color-dot" data-color="blue" style="background:var(--tag-blue)"></div>
+          <div class="color-dot" data-color="yellow" style="background:var(--tag-yellow)"></div>
+          <div class="color-dot" data-color="gray" style="background:var(--tag-gray)"></div>
+          <div class="color-dot" data-color="purple" style="background:var(--tag-purple)"></div>
+        </div>
+        <div class="pool-input-row">
+          <input type="text" id="pool-task-input" placeholder="想做的事...先丟進池子裡">
+          <button id="pool-task-add-btn">注入</button>
+        </div>
+        <div class="pool-list" id="pool-list"></div>
+      </div>
+    </div>
+
+    <div class="main-content-view">
+      <div id="week-view" class="week-kanban"></div>
+
+      <div id="month-view" style="display:none;">
+        <div class="month-grid" id="month-dow-row"></div>
+        <div class="month-grid" id="month-grid" style="margin-top:6px;"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="day-detail">
+    <div class="detail-card">
+      <button class="close-detail" id="close-detail-btn">×</button>
+      <div class="detail-head">
+        <div><span class="detail-date" id="detail-date-label"></span><span class="detail-sub" id="detail-dow-label"></span></div>
+      </div>
+
+      <div class="task-list" id="task-list"></div>
+      
+      <div class="add-task-row">
+        <div class="color-picker" id="detail-color-picker">
+          <span style="font-size:11px; color:var(--muted); margin-right:4px;">標籤:</span>
+          <div class="color-dot active" data-color="none" style="background:var(--tag-none)"></div>
+          <div class="color-dot" data-color="red" style="background:var(--tag-red)"></div>
+          <div class="color-dot" data-color="green" style="background:var(--tag-green)"></div>
+          <div class="color-dot" data-color="blue" style="background:var(--tag-blue)"></div>
+          <div class="color-dot" data-color="yellow" style="background:var(--tag-yellow)"></div>
+          <div class="color-dot" data-color="gray" style="background:var(--tag-gray)"></div>
+          <div class="color-dot" data-color="purple" style="background:var(--tag-purple)"></div>
+        </div>
+        <div class="input-main-line">
+          <input type="text" id="new-task-input" placeholder="直接新增當天待辦事項，Enter 送出">
+          <button id="add-task-btn">新增</button>
+        </div>
+      </div>
+
+      <div class="diary-section" style="margin-top:22px;">
+        <label>今日小日記</label>
+        <textarea id="diary-textarea" placeholder="今天過得怎麼樣呢 ···"></textarea>
+        <div class="save-indicator" id="save-indicator"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+/* ============================================================
+   Firebase 設定 — 請貼上你自己 Firebase 真正的位置和金鑰
+   ============================================================ */
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY_HERE",
+  authDomain: "YOUR_AUTH_DOMAIN_HERE",
+  projectId: "YOUR_PROJECT_ID_HERE",
+  storageBucket: "YOUR_STORAGE_BUCKET_HERE",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID_HERE",
+  appId: "YOUR_APP_ID_HERE"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+/* ============================================================
+   全域狀態與變數
+   ============================================================ */
+let currentUser = null;
+let currentView = 'week';        
+let anchorDate = new Date();      
+let selectedDateStr = null;       
+let daysData = {};                // { 'YYYY-MM-DD': { tasks:[...], diary:'' } }
+let weeksMeta = {};               // { 'YYYY-Wxx': { title: '' } }
+let monthsMeta = {};              // { 'YYYY-MM': { goal: '' } }
+let globalPool = [];              // [{id, text, color}]
+let selectedPoolColor = 'none';
+let selectedDetailColor = 'none';
+
+let unsubscribeDays = null;
+let unsubscribeWeeks = null;
+let unsubscribeMonths = null;
+let unsubscribePool = null;
+
+let diarySaveTimer = null;
+let monthGoalTimer = null;
+
+const WEEKDAY_LABELS = ['一','二','三','四','五','六','日'];
+const WEEKDAY_LABELS_SHORT = ['週一','週二','週三','週四','週五','週六','週日'];
+const MORANDI_COLORS = {
+  none: '#E8E3DA',
+  red: '#B87D73',
+  green: '#8A9A86',
+  blue: '#7E8F9F',
+  yellow: '#C2A675',
+  gray: '#9FA09E',
+  purple: '#A294B8'
+};
+
+/* ============================================================
+   日期計算小工具
+   ============================================================ */
+function pad2(n){ return String(n).padStart(2,'0'); }
+
+function toDateStr(d){
+  return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+}
+
+function fromDateStr(s){
+  const [y,m,d] = s.split('-').map(Number);
+  return new Date(y, m-1, d);
+}
+
+function isSameDay(a,b){
+  return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+}
+
+function getMondayOfWeek(d){
+  const date = new Date(d);
+  const dow = date.getDay(); 
+  const diff = (dow === 0 ? -6 : 1 - dow); 
+  date.setDate(date.getDate() + diff);
+  date.setHours(0,0,0,0);
+  return date;
+}
+
+// 取得週識別代碼 (格式: YYYY-Wxx)
+function getWeekIdentifier(d) {
+  const mon = getMondayOfWeek(d);
+  const year = mon.getFullYear();
+  // 計算是當年的第幾週
+  const startOfYear = new Date(year, 0, 1);
+  const pastDays = Math.floor((mon - startOfYear) / 86400000);
+  const weekNum = pad2(Math.ceil((pastDays + startOfYear.getDay() + 1) / 7));
+  return `${year}-W${weekNum}`;
+}
+
+function toMonthStr(d) {
+  return `${d.getFullYear()}-${pad2(d.getMonth()+1)}`;
+}
+
+function addDays(d, n){
+  const date = new Date(d);
+  date.setDate(date.getDate() + n);
+  return date;
+}
+
+function addMonths(d, n){
+  const date = new Date(d);
+  date.setMonth(date.getMonth() + n);
+  return date;
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+/* ============================================================
+   色彩選擇器事件綁定
+   ============================================================ */
+document.querySelectorAll('.color-picker:not(#detail-color-picker) .color-dot').forEach(dot => {
+  dot.addEventListener('click', (e) => {
+    document.querySelectorAll('.color-picker:not(#detail-color-picker) .color-dot').forEach(d => d.classList.remove('active'));
+    e.target.classList.add('active');
+    selectedPoolColor = e.target.dataset.color;
+  });
+});
+
+document.querySelectorAll('#detail-color-picker .color-dot').forEach(dot => {
+  dot.addEventListener('click', (e) => {
+    document.querySelectorAll('#detail-color-picker .color-dot').forEach(d => d.classList.remove('active'));
+    e.target.classList.add('active');
+    selectedDetailColor = e.target.dataset.color;
+  });
+});
+
+/* ============================================================
+   Firebase Auth 認證機制
+   ============================================================ */
+const googleProvider = new firebase.auth.GoogleAuthProvider();
+
+document.getElementById('google-login-btn').addEventListener('click', () => {
+  document.getElementById('login-error').textContent = '';
+  auth.signInWithPopup(googleProvider).catch(err => {
+    console.error(err);
+    document.getElementById('login-error').textContent = '登入失敗，請再試一次。';
+  });
+});
+
+document.getElementById('logout-btn').addEventListener('click', () => {
+  auth.signOut();
+});
+
+auth.onAuthStateChanged(user => {
+  document.getElementById('loading-screen').style.display = 'none';
+  if (user) {
+    currentUser = user;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').classList.add('visible');
+    document.getElementById('user-avatar').src = user.photoURL || '';
+    
+    // 開啟四大即時資料庫監聽
+    attachFirestoreListeners();
+  } else {
+    currentUser = null;
+    detachListeners();
+    daysData = {}; weeksMeta = {}; monthsMeta = {}; globalPool = [];
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('app').classList.remove('visible');
+    document.getElementById('day-detail').classList.remove('visible');
+  }
+});
+
+/* ============================================================
+   Firestore 即時資料監聽 (onSnapshot)
+   ============================================================ */
+function attachFirestoreListeners() {
+  const userDocRef = db.collection('users').doc(currentUser.uid);
+
+  // 1. 監聽每日待辦與日記
+  unsubscribeDays = userDocRef.collection('days').onSnapshot(snapshot => {
+    snapshot.docChanges().forEach(change => {
+      const dateStr = change.doc.id;
+      if (change.type === 'removed') delete daysData[dateStr];
+      else daysData[dateStr] = change.doc.data();
+    });
+    renderCurrentView();
+    if (selectedDateStr) renderDayDetail(selectedDateStr);
+  });
+
+  // 2. 監聽自訂週標題
+  unsubscribeWeeks = userDocRef.collection('weeks').onSnapshot(snapshot => {
+    snapshot.docChanges().forEach(change => {
+      if (change.type !== 'removed') weeksMeta[change.doc.id] = change.doc.data();
+    });
+    updateWeekTitleUI();
+  });
+
+  // 3. 監聽月大目標
+  unsubscribeMonths = userDocRef.collection('months').onSnapshot(snapshot => {
+    snapshot.docChanges().forEach(change => {
+      if (change.type !== 'removed') monthsMeta[change.doc.id] = change.doc.data();
+    });
+    updateMonthGoalUI();
+  });
+
+  // 4. 監聽本週池
+  unsubscribePool = userDocRef.collection('pool').order('createdAt', 'asc').onSnapshot(snapshot => {
+    globalPool = [];
+    snapshot.forEach(doc => {
+      globalPool.push({ id: doc.id, ...doc.data() });
+    });
+    renderPoolUI();
+  });
+}
+
+function detachListeners() {
+  if (unsubscribeDays) unsubscribeDays();
+  if (unsubscribeWeeks) unsubscribeWeeks();
+  if (unsubscribeMonths) unsubscribeMonths();
+  if (unsubscribePool) unsubscribePool();
+}
+
+/* ============================================================
+   資料庫存取方法
+   ============================================================ */
+function getDayData(dateStr) {
+  return daysData[dateStr] || { tasks: [], diary: '' };
+}
+
+/* 新增每日清單任務 */
+async function addTask(dateStr, text, color = 'none') {
+  const trimmed = text.trim();
+  if (!trimmed) return;
+  const current = getDayData(dateStr);
+  const newTask = { 
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2,6), 
+    text: trimmed, 
+    done: false,
+    color: color
+  };
+  const tasks = [...(current.tasks || []), newTask];
+  await db.collection('users').doc(currentUser.uid).collection('days').doc(dateStr).set({ tasks, diary: current.diary || '' }, { merge: true });
+}
+
+/* 切換勾選狀態 */
+async function toggleTask(dateStr, taskId) {
+  const current = getDayData(dateStr);
+  const tasks = (current.tasks || []).map(t => t.id === taskId ? { ...t, done: !t.done } : t);
+  await db.collection('users').doc(currentUser.uid).collection('days').doc(dateStr).set({ tasks }, { merge: true });
+}
+
+/* 刪除日期任務 */
+async function deleteTask(dateStr, taskId) {
+  const current = getDayData(dateStr);
+  const tasks = (current.tasks || []).filter(t => t.id !== taskId);
+  await db.collection('users').doc(currentUser.uid).collection('days').doc(dateStr).set({ tasks }, { merge: true });
+}
+
+/* 自動儲存小日記 */
+function scheduleDiarySave(dateStr, text) {
+  clearTimeout(diarySaveTimer);
+  const indicator = document.getElementById('save-indicator');
+  indicator.textContent = '自動儲存中···';
+  diarySaveTimer = setTimeout(async () => {
+    const current = getDayData(dateStr);
+    await db.collection('users').doc(currentUser.uid).collection('days').doc(dateStr).set({ diary: text, tasks: current.tasks || [] }, { merge: true });
+    indicator.textContent = '已儲存 ✓';
+  }, 800);
+}
+
+/* 自動儲存月目標 */
+document.getElementById('month-goal-input').addEventListener('input', (e) => {
+  clearTimeout(monthGoalTimer);
+  const mStr = toMonthStr(anchorDate);
+  const indicator = document.getElementById('month-goal-indicator');
+  indicator.textContent = '同步中...';
+  monthGoalTimer = setTimeout(async () => {
+    await db.collection('users').doc(currentUser.uid).collection('months').doc(mStr).set({ goal: e.target.value }, { merge: true });
+    indicator.textContent = '儲存成功';
+    setTimeout(() => { indicator.textContent = ''; }, 1500);
+  }, 800);
+});
+
+function updateMonthGoalUI() {
+  const mStr = toMonthStr(anchorDate);
+  const tx = document.getElementById('month-goal-input');
+  if (document.activeElement !== tx) {
+    tx.value = (monthsMeta[mStr] && monthsMeta[mStr].goal) ? monthsMeta[mStr].goal : '';
+  }
+}
+
+/* 自訂週標題邏輯 */
+const editWeekBtn = document.getElementById('week-title-edit-btn');
+const weekTitleText = document.getElementById('week-title-text');
+const weekTitleInput = document.getElementById('week-title-input');
+
+editWeekBtn.addEventListener('click', () => {
+  if (weekTitleInput.style.display === 'none' || weekTitleInput.style.display === '') {
+    weekTitleInput.style.display = 'inline-block';
+    weekTitleText.style.display = 'none';
+    weekTitleInput.value = weekTitleText.textContent === '點擊命名' ? '' : weekTitleText.textContent;
+    weekTitleInput.focus();
+    editWeekBtn.textContent = '💾';
+  } else {
+    saveWeekTitle();
+  }
+});
+
+weekTitleInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') saveWeekTitle(); });
+
+async function saveWeekTitle() {
+  const wId = getWeekIdentifier(anchorDate);
+  const val = weekTitleInput.value.trim();
+  await db.collection('users').doc(currentUser.uid).collection('weeks').doc(wId).set({ title: val });
+  weekTitleInput.style.display = 'none';
+  weekTitleText.style.display = 'inline-block';
+  editWeekBtn.textContent = '✏️';
+}
+
+function updateWeekTitleUI() {
+  const wId = getWeekIdentifier(anchorDate);
+  if (weeksMeta[wId] && weeksMeta[wId].title) {
+    weekTitleText.textContent = weeksMeta[wId].title;
+  } else {
+    weekTitleText.textContent = '點擊命名';
+  }
+}
+
+/* ============================================================
+   任務池（池子）核心操作
+   ============================================================ */
+document.getElementById('pool-task-add-btn').addEventListener('click', addPoolItem);
+document.getElementById('pool-task-input').addEventListener('keydown', (e) => { if(e.key === 'Enter') addPoolItem(); });
+
+async function addPoolItem() {
+  const input = document.getElementById('pool-task-input');
+  const txt = input.value.trim();
+  if(!txt) return;
+  await db.collection('users').doc(currentUser.uid).collection('pool').add({
+    text: txt,
+    color: selectedPoolColor,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+  input.value = '';
+}
+
+function renderPoolUI() {
+  const container = document.getElementById('pool-list');
+  container.innerHTML = '';
+  
+  if (globalPool.length === 0) {
+    container.innerHTML = `<div style="font-size:12px; color:var(--muted); text-style:italic;">池子空空的，寫下任務吧！</div>`;
+    return;
+  }
+
+  const monday = getMondayOfWeek(anchorDate);
+
+  globalPool.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'pool-item';
+    div.style.borderLeftColor = MORANDI_COLORS[item.color || 'none'];
+    
+    // 生成分配下拉選單
+    let optionsHtml = `<option value="">📍 分配到日期...</option>`;
+    for(let i=0; i<7; i++) {
+      const targetDate = addDays(monday, i);
+      const dateStr = toDateStr(targetDate);
+      optionsHtml += `<option value="${dateStr}">${WEEKDAY_LABELS_SHORT[i]} (${targetDate.getDate()}日)</option>`;
+    }
+
+    div.innerHTML = `
+      <span class="pool-item-text">${escapeHtml(item.text)}</span>
+      <button class="pool-item-del">×</button>
+      <div class="assign-row">
+        <select class="assign-select">${optionsHtml}</select>
+      </div>
+    `;
+
+    // 監聽分配行為 (連動傳送)
+    div.querySelector('.assign-select').addEventListener('change', async (e) => {
+      const chosenDate = e.target.value;
+      if(!chosenDate) return;
+      // 1. 複製派發到每日待辦清單
+      await addTask(chosenDate, item.text, item.color || 'none');
+      // 2. 從本週池中移除
+      await db.collection('users').doc(currentUser.uid).collection('pool').doc(item.id).delete();
+    });
+
+    div.querySelector('.pool-item-del').addEventListener('click', async () => {
+      await db.collection('users').doc(currentUser.uid).collection('pool').doc(item.id).delete();
+    });
+
+    container.appendChild(div);
+  });
+}
+
+/* ============================================================
+   主要視圖控制與導覽
+   ============================================================ */
+document.getElementById('btn-week-view').addEventListener('click', () => switchView('week'));
+document.getElementById('btn-month-view').addEventListener('click', () => switchView('month'));
+
+function switchView(view) {
+  currentView = view;
+  document.getElementById('btn-week-view').classList.toggle('active', view === 'week');
+  document.getElementById('btn-month-view').classList.toggle('active', view === 'month');
+  document.getElementById('week-view').style.display = view === 'week' ? 'grid' : 'none';
+  document.getElementById('month-view').style.display = view === 'month' ? 'block' : 'none';
+  renderCurrentView();
+}
+
+document.getElementById('nav-prev').addEventListener('click', () => {
+  anchorDate = currentView === 'week' ? addDays(anchorDate, -7) : addMonths(anchorDate, -1);
+  renderCurrentView();
+});
+document.getElementById('nav-next').addEventListener('click', () => {
+  anchorDate = currentView === 'week' ? addDays(anchorDate, 7) : addMonths(anchorDate, 1);
+  renderCurrentView();
+});
+document.getElementById('nav-today').addEventListener('click', () => {
+  anchorDate = new Date();
+  renderCurrentView();
+});
+
+function renderCurrentView() {
+  if (!currentUser) return;
+  updateMonthGoalUI();
+  updateWeekTitleUI();
+  renderPoolUI();
+  if (currentView === 'week') renderWeekKanbanView();
+  else renderMonthView();
+}
+
+/* ============================================================
+   大核心：橫向並排手帳看板 (由左至右橫排，待辦直直排下來)
+   ============================================================ */
+function renderWeekKanbanView() {
+  const monday = getMondayOfWeek(anchorDate);
+  const sunday = addDays(monday, 6);
+  document.getElementById('period-label').textContent =
+    `${monday.getFullYear()}/${pad2(monday.getMonth()+1)}/${pad2(monday.getDate())} – ${pad2(sunday.getMonth()+1)}/${pad2(sunday.getDate())}`;
+
+  const container = document.getElementById('week-view');
+  container.innerHTML = '';
+  const today = new Date();
+
+  for (let i = 0; i < 7; i++) {
+    const d = addDays(monday, i);
+    const dateStr = toDateStr(d);
+    const data = getDayData(dateStr);
+    const tasks = data.tasks || [];
+
+    const col = document.createElement('div');
+    col.className = 'kanban-col' + (isSameDay(d, today) ? ' is-today' : '');
+    
+    // 看板天標題
+    const header = document.createElement('div');
+    header.className = 'kanban-header';
+    header.innerHTML = `<span class="dow">${WEEKDAY_LABELS_SHORT[i]}</span><span class="num">${d.getDate()}</span>`;
+    header.addEventListener('click', () => openDayDetail(dateStr));
+
+    // 看板待辦事項容器 (直直排下來)
+    const taskListContainer = document.createElement('div');
+    taskListContainer.className = 'kanban-task-list';
+    taskListContainer.addEventListener('click', () => openDayDetail(dateStr));
+
+    if (tasks.length === 0) {
+      taskListContainer.innerHTML = `<div style="font-size:11px; color:var(--muted); font-style:italic; text-align:center; padding-top:10px;">無事項</div>`;
+    } else {
+      tasks.forEach(t => {
+        const item = document.createElement('div');
+        item.className = 'kanban-task-item' + (t.done ? ' done' : '');
+        item.style.borderLeftColor = MORANDI_COLORS[t.color || 'none'];
+        item.innerHTML = `<span class="dot-indicator"></span><span class="text-span">${escapeHtml(t.text)}</span>`;
+        taskListContainer.appendChild(item);
+      });
+    }
+
+    col.appendChild(header);
+    col.appendChild(taskListContainer);
+
+    // 日記存在提示
+    if (data.diary && data.diary.trim()) {
+      const diaryFlag = document.createElement('div');
+      diaryFlag.className = 'kanban-diary-flag';
+      diaryFlag.textContent = '✍️ 有日記';
+      col.appendChild(diaryFlag);
+    }
+
+    container.appendChild(col);
+  }
+}
+
+/* ============================================================
+   月計畫傳統網格檢視
+   ============================================================ */
+function renderMonthView() {
+  const year = anchorDate.getFullYear();
+  const month = anchorDate.getMonth();
+  document.getElementById('period-label').textContent = `${year} 年 ${month+1} 月`;
+
+  const dowRow = document.getElementById('month-dow-row');
+  dowRow.innerHTML = WEEKDAY_LABELS.map(l => `<div class="month-dow">${l}</div>`).join('');
+
+  const grid = document.getElementById('month-grid');
+  grid.innerHTML = '';
+
+  const firstOfMonth = new Date(year, month, 1);
+  const startDate = getMondayOfWeek(firstOfMonth);
+  const lastOfMonth = new Date(year, month + 1, 0);
+  const endDate = getMondayOfWeek(lastOfMonth);
+  const totalCells = Math.round((addDays(endDate,6) - startDate) / 86400000) + 1;
+
+  const today = new Date();
+
+  for (let i = 0; i < totalCells; i++) {
+    const d = addDays(startDate, i);
+    const dateStr = toDateStr(d);
+    const data = getDayData(dateStr);
+    const tasks = data.tasks || [];
+    const outside = d.getMonth() !== month;
+
+    const cell = document.createElement('div');
+    cell.className = 'month-cell' + (outside ? ' outside' : '') + (isSameDay(d, today) ? ' is-today' : '');
+    cell.dataset.date = dateStr;
+
+    let dotsHtml = '';
+    if (tasks.length > 0) {
+      dotsHtml = '<div class="cell-dots">' +
+        tasks.slice(0,6).map(t => `<span class="dot${t.done ? ' done' : ''}" style="background:${MORANDI_COLORS[t.color || 'red']}"></span>`).join('') +
+        '</div>';
+    }
+    const diaryMark = (data.diary && data.diary.trim()) ? '<div class="diary-mark" title="今日有日記"></div>' : '';
+
+    cell.innerHTML = `<span class="cell-num">${d.getDate()}</span>${diaryMark}${dotsHtml}`;
+    cell.addEventListener('click', () => openDayDetail(dateStr));
+    grid.appendChild(cell);
+  }
+}
+
+/* ============================================================
+   單日詳情彈出卡卡片 (點擊日期看板任意處開啟)
+   ============================================================ */
+function openDayDetail(dateStr) {
+  selectedDateStr = dateStr;
+  renderDayDetail(dateStr);
+  document.getElementById('day-detail').style.display = 'block';
+  document.getElementById('day-detail').scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+document.getElementById('close-detail-btn').addEventListener('click', () => {
+  document.getElementById('day-detail').style.display = 'none';
+  selectedDateStr = null;
+});
+
+function renderDayDetail(dateStr) {
+  const d = fromDateStr(dateStr);
+  const dow = (d.getDay() + 6) % 7; 
+  document.getElementById('detail-date-label').textContent =
+    `${d.getFullYear()}/${pad2(d.getMonth()+1)}/${pad2(d.getDate())}`;
+  document.getElementById('detail-dow-label').textContent = WEEKDAY_LABELS_SHORT[dow];
+
+  const data = getDayData(dateStr);
+  const tasks = data.tasks || [];
+
+  const list = document.getElementById('task-list');
+  list.innerHTML = '';
+  if (tasks.length === 0) {
+    list.innerHTML = `<div style="font-size:13px; color:var(--muted); padding:10px 0;">這天還沒有任何待辦事項。</div>`;
+  } else {
+    tasks.forEach(t => {
+      const item = document.createElement('div');
+      item.className = 'task-item';
+      item.style.borderLeftColor = MORANDI_COLORS[t.color || 'none'];
+      item.innerHTML = `
+        <div class="task-checkbox${t.done ? ' checked' : ''}"></div>
+        <div class="task-text${t.done ? ' done' : ''}">${escapeHtml(t.text)}</div>
+        <button class="task-del">×</button>
+      `;
+      item.querySelector('.task-checkbox').addEventListener('click', () => toggleTask(dateStr, t.id));
+      item.querySelector('.task-del').addEventListener('click', () => deleteTask(dateStr, t.id));
+      list.appendChild(item);
+    });
+  }
+
+  const textarea = document.getElementById('diary-textarea');
+  if (document.activeElement !== textarea) {
+    textarea.value = data.diary || '';
+  }
+  document.getElementById('save-indicator').textContent = '';
+}
+
+document.getElementById('add-task-btn').addEventListener('click', submitNewTask);
+document.getElementById('new-task-input').addEventListener('keydown', e => { if (e.key === 'Enter') submitNewTask(); });
+
+function submitNewTask() {
+  const input = document.getElementById('new-task-input');
+  if (!selectedDateStr || !input.value.trim()) return;
+  addTask(selectedDateStr, input.value, selectedDetailColor);
+  input.value = '';
+}
+
+document.getElementById('diary-textarea').addEventListener('input', e => {
+  if (!selectedDateStr) return;
+  scheduleDiarySave(selectedDateStr, e.target.value);
+});
+
+/* ============================================================
+   Service Worker (PWA 離線支援)
+   ============================================================ */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(err => console.warn('SW 註冊失敗:', err));
+  });
+}
+</script>
+</body>
+</html>
