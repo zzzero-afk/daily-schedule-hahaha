@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0">
-<title>P人消滅計畫 v3 (任務與記帳手帳)</title>
+<title>P人消滅計畫</title>
 
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#FAF8F5">
@@ -204,7 +204,7 @@
   .task-item:hover .task-del{opacity:0.6;}
   .postpone-btn { border: 1px solid var(--line); background: var(--card); color: var(--accent); font-size: 10.5px; border-radius: 4px; padding: 2px 6px; cursor: pointer; margin-left: 8px; }
 
-  /* 🪙 記帳輸入區塊 */
+  /* 💸 記帳輸入區塊 */
   .accounting-section { margin-bottom: 20px; background: #FAF9F6; padding: 12px; border-radius: 10px; border: 1px solid var(--line); }
   .accounting-section h4 { font-size: 13.5px; margin: 0 0 10px 0; color: var(--ink); display: flex; justify-content: space-between; }
   .ledger-row { display: flex; gap: 6px; margin-bottom: 10px; }
@@ -232,7 +232,7 @@
 <div id="login-screen" style="display:none;">
   <div class="brand-mark">JOURNAL · PLANNER</div>
   <h1>P人消滅計畫 v3</h1>
-  <p>合併週計畫池 ＋ 精實記帳模式<br>打造高度自律生活</p>
+  <p>procrastination<br>*noun[U]*<br>We need decisive action.</p>
   <button class="google-btn" id="google-login-btn">
     <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.9 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.5 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 16 19 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.5 29.6 4 24 4c-7.4 0-13.8 4.2-17 10.7z"/><path fill="#4CAF50" d="M24 44c5.4 0 10.3-2.1 14-5.5l-6.5-5.4C29.4 35 26.8 36 24 36c-5.3 0-9.7-3.1-11.3-7.6l-6.6 5.1C9.9 39.7 16.4 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-1.1 3.1-3.4 5.6-6.3 7.1l6.5 5.4C39.5 37.2 44 31.5 44 24c0-1.3-.1-2.7-.4-3.5z"/></svg>
     使用 Google 帳號登入
@@ -244,7 +244,7 @@
   <header class="topbar">
     <div class="topbar-left">
       <span class="eyebrow">KANBAN & LEDGER</span>
-      <h1>P人大作戰</h1>
+      <h1>P人自有妙計</h1>
     </div>
     <div class="topbar-right">
       <img id="user-avatar" src="" alt="使用者">
@@ -268,7 +268,7 @@
     <div class="week-title-area" id="week-title-container">
       <span class="week-title-display" id="week-title-text">點擊命名</span>
       <input type="text" class="week-title-input" id="week-title-input" placeholder="例：開學週">
-      <button class="week-title-btn" id="week-title-edit-btn">✏️</button>
+      <button class="week-title-btn" id="week-title-edit-btn">🖉</button>
     </div>
   </div>
 
@@ -293,9 +293,9 @@
       </div>
 
       <div class="panel-card">
-        <h3>本週計畫大池子</h3>
+        <h3>本週計畫</h3>
         <div class="color-picker">
-          <span style="font-size:11px; color:var(--muted); margin-right:4px;">標籤:</span>
+          <span style="font-size:11px; color:var(--muted); margin-right:4px;"></span>
           <div class="color-dot active" data-color="none" style="background:var(--tag-none)"></div>
           <div class="color-dot" data-color="red" style="background:var(--tag-red)"></div>
           <div class="color-dot" data-color="green" style="background:var(--tag-green)"></div>
@@ -306,10 +306,10 @@
         </div>
         <div class="pool-input-area">
           <div class="pool-input-row">
-            <input type="text" id="pool-task-input" placeholder="輸入計畫後按注入...">
+            <input type="text" id="pool-task-input" placeholder="輸入計畫...">
             <button id="pool-task-add-btn">注入</button>
           </div>
-          <input type="text" id="pool-task-note" class="pool-note-input" placeholder="📝 加上計畫備註（選填，點擊可改）...">
+          <input type="text" id="pool-task-note" class="pool-note-input" placeholder="備註...">
         </div>
         <div class="pool-list" id="pool-list"></div>
       </div>
@@ -317,7 +317,7 @@
 
     <div class="main-content-view">
       <div class="week-view-container">
-        <div class="bubble-banner" id="bubble-banner">🎈 舊週計畫未完成！觸發拖延惩罰，化作時間泡泡流過來。</div>
+        <div class="bubble-banner" id="bubble-banner">🫧 上週計畫未完成！拖延症發作，化作時間泡泡流過來。</div>
         <div id="week-view" class="week-kanban"></div>
       </div>
 
@@ -336,11 +336,11 @@
         <div><span class="detail-date" id="detail-date-label"></span><span class="detail-sub" id="detail-dow-label"></span></div>
       </div>
 
-      <div style="font-size:12px; font-weight:700; margin-bottom:6px; color:var(--muted);">當日任務分配狀態</div>
+      <div style="font-size:12px; font-weight:700; margin-bottom:6px; color:var(--muted);"></div>
       <div class="task-list" id="task-list"></div>
       
       <div class="accounting-section">
-        <h4><span>🪙 今日支出記帳</span> <span id="detail-day-spend-total" style="color:var(--accent);">共 $0</span></h4>
+        <h4><span>💸花錢如流水</span> <span id="detail-day-spend-total" style="color:var(--accent);">共 $0</span></h4>
         <div class="ledger-row">
           <select id="ledger-category">
             <option value="三餐">三餐</option>
@@ -352,16 +352,17 @@
             <option value="打扮">打扮</option>
             <option value="休閒">休閒</option>
             <option value="課業">課業</option>
+            <option value="其他">其他</option>
           </select>
-          <input type="number" id="ledger-amount" placeholder="輸入金額" min="0" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+          <input type="number" id="ledger-amount" placeholder="多少？" min="0" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
           <button id="add-ledger-btn">記帳</button>
         </div>
         <div class="ledger-list" id="ledger-list"></div>
       </div>
 
       <div class="diary-section">
-        <label>今日小日記</label>
-        <textarea id="diary-textarea" placeholder="今天過得怎麼樣呢 ···"></textarea>
+        <label>流水帳</label>
+        <textarea id="diary-textarea" placeholder="今天如何···"></textarea>
         <div class="save-indicator" id="save-indicator"></div>
       </div>
     </div>
@@ -625,7 +626,7 @@ function checkAndSyncWeekPlans() {
 }
 
 /* ============================================================
-   📝 備註動態雙擊/點擊即時編輯
+   ✐ 備註動態雙擊/點擊即時編輯
    ============================================================ */
 function enableInlineNoteEdit(element, id, collectionType, dateStr = null, taskId = null) {
   element.addEventListener('click', (e) => {
@@ -669,7 +670,7 @@ async function checkAndCarryOverBubbles() {
 }
 
 /* ============================================================
-   🪙 記帳運算增刪
+   💸 記帳運算增刪
    ============================================================ */
 async function addLedgerItem() {
   if (!selectedDateStr) return;
@@ -708,7 +709,7 @@ function renderPoolUI() {
   const thisWeekTasks = globalPool.filter(item => item.weekId === currentWeekId);
 
   if (thisWeekTasks.length === 0) {
-    container.innerHTML = `<div style="font-size:12px; color:var(--muted); font-style:italic; padding:10px;">當週池子空空的，請注入目標計畫。</div>`;
+    container.innerHTML = `<div style="font-size:12px; color:var(--muted); font-style:italic; padding:10px;">欸！！這週沒事做嗎？</div>`;
     return;
   }
   const monday = getMondayOfWeek(anchorDate);
@@ -728,7 +729,7 @@ function renderPoolUI() {
         </label>`;
     }
 
-    const displayNote = item.note ? `📝 ${item.note} (點擊可改)` : `📝 點擊添加備註...`;
+    const displayNote = item.note ? `✐ ${item.note} (點擊可改)` : `✐ 點擊添加備註...`;
     const noteSpanHtml = `<span class="editable-note-span" id="note-pool-${item.id}">${escapeHtml(displayNote)}</span>`;
     let badgeHtml = item.isBubble ? `<span style="font-size:9px; background:#C75D3D; color:#fff; padding:1px 4px; border-radius:3px; margin-right:4px;">🎈 漂流泡泡 (-5)</span>` : '';
 
@@ -806,12 +807,12 @@ function renderWeekKanbanView() {
       tasks.forEach(t => {
         const item = document.createElement('div'); item.className = 'kanban-task-item' + (t.done ? ' done' : '') + (t.postponed ? ' postponed' : '');
         item.style.borderLeftColor = MORANDI_COLORS[t.color || 'none'];
-        item.innerHTML = `<span class="dot-indicator"></span><span class="text-span">${escapeHtml(t.text)}${t.note ? ' 📝':''}${t.postponed ? ' 🕒':''}</span>`;
+        item.innerHTML = `<span class="dot-indicator"></span><span class="text-span">${escapeHtml(t.text)}${t.note ? ' ✐':''}${t.postponed ? ' ↪️':''}</span>`;
         taskListContainer.appendChild(item);
       });
     }
 
-    // 🪙 底部記帳小卡摘要
+    // 💸 底部記帳小卡摘要
     const accountingSummaryDiv = document.createElement('div');
     accountingSummaryDiv.className = 'kanban-accounting-summary';
     accountingSummaryDiv.addEventListener('click', () => openDayDetail(dateStr));
@@ -880,15 +881,15 @@ function renderDayDetail(dateStr) {
   // 1. 渲染分配進來的任務
   const tasks = data.tasks || []; const list = document.getElementById('task-list'); list.innerHTML = '';
   if (tasks.length === 0) {
-    list.innerHTML = `<div style="font-size:12px; color:var(--muted); font-style:italic; padding:6px 0;">今日無分配的週計畫任務。可到左側大池子指派過來。</div>`;
+    list.innerHTML = `<div style="font-size:12px; color:var(--muted); font-style:italic; padding:6px 0;">今天沒事做！</div>`;
   } else {
     tasks.forEach(t => {
       const item = document.createElement('div'); item.className = 'task-item';
       item.style.borderLeft = `3px solid ${MORANDI_COLORS[t.color || 'none']}`; paddingLeft = '6px';
       
-      const displayNote = t.note ? `📝 ${t.note} (點擊編輯)` : `📝 點擊添加備註...`;
+      const displayNote = t.note ? `✐ ${t.note} (點擊編輯)` : `✐ 點擊添加備註...`;
       const noteSpanHtml = `<span class="editable-note-span" id="note-day-${t.id}">${escapeHtml(displayNote)}</span>`;
-      const postponeBtnHtml = (!t.done && !t.postponed) ? `<button class="postpone-btn" id="postpone-btn-${t.id}">🕒 明天再做 (-3)</button>` : '';
+      const postponeBtnHtml = (!t.done && !t.postponed) ? `<button class="postpone-btn" id="postpone-btn-${t.id}">⏭︎</button>` : '';
 
       item.innerHTML = `
         <div class="task-checkbox${t.done ? ' checked' : ''}"></div>
@@ -911,13 +912,13 @@ function renderDayDetail(dateStr) {
     });
   }
 
-  // 2. 🪙 渲染今日記帳列表
+  // 2. 💸 渲染今日記帳列表
   const ledger = data.ledger || []; const ledgerListEl = document.getElementById('ledger-list'); ledgerListEl.innerHTML = '';
   let totalSpend = ledger.reduce((sum, item) => sum + (item.amount || 0), 0);
   document.getElementById('detail-day-spend-total').textContent = `共 $${totalSpend}`;
 
   if(ledger.length === 0) {
-    ledgerListEl.innerHTML = `<div style="font-size:11px; color:var(--muted); font-style:italic;">本日無支出記帳項目。</div>`;
+    ledgerListEl.innerHTML = `<div style="font-size:11px; color:var(--muted); font-style:italic;">今天沒有花錢</div>`;
   } else {
     ledger.forEach(item => {
       const ledgDiv = document.createElement('div'); ledgDiv.className = 'ledger-item';
@@ -992,7 +993,7 @@ const weekTitleInput = document.getElementById('week-title-input');
 editWeekBtn.addEventListener('click', () => {
   if (weekTitleInput.style.display === 'none' || weekTitleInput.style.display === '') {
     weekTitleInput.style.display = 'inline-block'; weekTitleText.style.display = 'none';
-    weekTitleInput.value = weekTitleText.textContent === '點擊命名' ? '' : weekTitleText.textContent;
+    weekTitleInput.value = weekTitleText.textContent === '命名' ? '' : weekTitleText.textContent;
     weekTitleInput.focus(); editWeekBtn.textContent = '💾';
   } else { saveWeekTitle(); }
 });
@@ -1000,11 +1001,11 @@ weekTitleInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') saveWe
 async function saveWeekTitle() {
   const wId = getWeekIdentifier(anchorDate); const val = weekTitleInput.value.trim();
   await db.collection('users').doc(currentUser.uid).collection('weeks').doc(wId).set({ title: val });
-  weekTitleInput.style.display = 'none'; weekTitleText.style.display = 'inline-block'; editWeekBtn.textContent = '✏️';
+  weekTitleInput.style.display = 'none'; weekTitleText.style.display = 'inline-block'; editWeekBtn.textContent = '🖉';
 }
 function updateWeekTitleUI() {
   const wId = getWeekIdentifier(anchorDate);
-  weekTitleText.textContent = (weeksMeta[wId] && weeksMeta[wId].title) ? weeksMeta[wId].title : '點擊命名';
+  weekTitleText.textContent = (weeksMeta[wId] && weeksMeta[wId].title) ? weeksMeta[wId].title : '命名';
 }
 
 /* 池子大目標注入 */
