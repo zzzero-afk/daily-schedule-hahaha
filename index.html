@@ -819,21 +819,27 @@ function renderPoolUI() {
   if (!container) return;
   container.innerHTML = '';
   
-  // 1. 篩選出當週的任務
   const currentWeekId = getWeekIdentifier(anchorDate);
+  
+  // 篩選出屬於當週的池子任務（包含當週建立的週計畫、以及從別天匯入的日計畫）
   const thisWeekTasks = globalPool.filter(item => item.weekId === currentWeekId);
 
   if (thisWeekTasks.length === 0) {
-    container.innerHTML = `<div style="font-size:12px; color:var(--muted); font-style:italic; padding:10px;">當週池子空空的，寫下任務吧！</div>`;
+    container.innerHTML = `<div style="font-size:12px; color:var(--muted); font-style:italic; padding:10px;">當週池子空空的，任務會從日/週計畫流入或手動新增。</div>`;
     return;
   }
 
   const monday = getMondayOfWeek(anchorDate);
 
-  // 2. 這裡就是每一筆任務（thisWeekTasks）的處理迴圈
   thisWeekTasks.forEach(item => {
     const div = document.createElement('div');
     div.className = 'pool-item';
+    
+    // 如果完成了，加個淡化與刪除線的效果
+    if (item.status === 'completed') {
+      div.style.opacity = '0.6';
+    }
+    
     div.style.borderLeft = `4px solid ${MORANDI_COLORS[item.color || 'none']}`;
     div.style.position = 'relative';
     div.style.padding = '10px';
@@ -842,54 +848,92 @@ function renderPoolUI() {
     div.style.borderRadius = '6px';
     div.style.border = '1px solid var(--line)';
     
-    // 生成這週一到週日的核取方塊（打勾用）
+    // 建立一到日的分配打勾 HTML (僅限週計畫類型需要分配)
     let checkboxesHtml = '';
-    for(let i=0; i<7; i++) {
-      const targetDate = addDays(monday, i);
-      const dateStr = toDateStr(targetDate);
-      checkboxesHtml += `
-        <label style="display:inline-flex; align-items:center; font-size:11px; margin-right:8px; cursor:pointer; color:var(--muted);">
-          <input type="checkbox" class="assign-check" value="${dateStr}" style="margin-right:2px; cursor:pointer;">
-          ${WEEKDAY_LABELS_SHORT[i]}(${targetDate.getDate()})
-        </label>
-      `;
+    if (item.type === 'week') {
+      for(let i=0; i<7; i++) {
+        const targetDate = addDays(monday, i);
+        const dateStr = toDateStr(targetDate);
+        checkboxesHtml += `
+          <label style="display:inline-flex; align-items:center; font-size:11px; margin-right:8px; cursor:pointer; color:var(--muted);">
+            <input type="checkbox" class="assign-check" value="${dateStr}" style="margin-right:2px; cursor:pointer;">
+            ${WEEKDAY_LABELS_SHORT[i]}
+          </label>
+        `;
+      }
     }
 
+    // 備註顯示判斷
+    const noteHtml = item.note ? `<div style="font-size:11px; color:var(--muted); background:rgba(0,0,0,0.03); padding:4px; border-radius:4px; margin-top:4px; font-style:italic;">📝 ${escapeHtml(item.note)}</div>` : '';
+    
+    // 類型標籤 (日/週)
+    const typeBadge = item.type === 'week' ? 
+      `<span style="font-size:9px; background:#7E8F9F; color:#fff; padding:1px 4px; border-radius:3px; margin-right:4px;">週計畫</span>` : 
+      `<span style="font-size:9px; background:#C2A675; color:#fff; padding:1px 4px; border-radius:3px; margin-right:4px;">日匯入</span>`;
+
     div.innerHTML = `
-      <span class="pool-item-text" style="display:block; font-weight:500; margin-bottom:6px; padding-right:20px;">${escapeHtml(item.text)}</span>
-      <button class="pool-item-del" style="position:absolute; right:8px; top:8px; border:none; background:transparent; color:var(--muted); cursor:pointer; font-size:16px;">×</button>
-      
-      <div class="assign-checkboxes" style="margin-top:6px; line-height: 1.8;">
-        ${checkboxesHtml}
+      <div style="display:flex; align-items:flex-start; padding-right:20px;">
+        <input type="checkbox" class="pool-main-lock" ${item.status === 'completed' ? 'checked' : ''} style="margin-right:6px; margin-top:3px;" ${item.type === 'week' ? 'disabled' : ''}> 
+        <div>
+          <span class="pool-item-text" style="font-weight:500; ${item.status === 'completed' ? 'text-decoration:line-through;' : ''}">${typeBadge}${escapeHtml(item.text)}</span>
+          ${noteHtml}
+        </div>
       </div>
+      <button class="pool-item-del" style="position:absolute; right:8px; top:8px; border:none; background:transparent; color:var(--muted); cursor:pointer; font-size:14px;">×</button>
       
-      <div style="margin-top:6px; text-align:right;">
-        <button class="confirm-assign-btn" style="font-size:11px; border:none; background:var(--ink); color:var(--bg); border-radius:4px; padding:3px 8px; cursor:pointer;">分配</button>
-      </div>
+      ${item.type === 'week' && item.status !== 'completed' ? `
+        <div class="assign-checkboxes" style="margin-top:8px; border-top:1px dashed var(--line); padding-top:6px;">
+          <span style="font-size:11px; color:var(--muted); display:block; margin-bottom:2px;">分配到派生日子：</span>
+          ${checkboxesHtml}
+          <div style="text-align:right; margin-top:4px;">
+            <button class="confirm-assign-btn" style="font-size:10px; border:none; background:var(--ink); color:var(--bg); border-radius:4px; padding:2px 6px; cursor:pointer;">確認分配</button>
+          </div>
+        </div>
+      ` : ''}
     `;
 
-    // 監聽分配按鈕（把被打勾的日期通通複製一份過去）
-    div.querySelector('.confirm-assign-btn').addEventListener('click', async () => {
-      const checkedBoxes = div.querySelectorAll('.assign-check:checked');
-      const selectedDates = Array.from(checkedBoxes).map(cb => cb.value);
-      
-      if (selectedDates.length === 0) {
-        alert('請先勾選想要分配的星期喔！');
-        return;
+    // 監聽手動點擊打勾 (日計畫可在池子直接勾，週計畫防呆必須由日子全勾連動)
+    if (item.type !== 'week') {
+      div.querySelector('.pool-main-lock').addEventListener('change', async (e) => {
+        const newStatus = e.target.checked ? 'completed' : 'pending';
+        // 同步更新池子狀態
+        await db.collection('users').doc(currentUser.uid).collection('pool').doc(item.id).update({ status: newStatus });
+        // 連動找到當天對應的日計畫一起打勾
+        if (item.linkedDayStr) {
+          updateLinkedDayTaskStatus(item.linkedDayStr, item.text, newStatus);
+        }
+      });
+    }
+
+    // 監聽週計畫的「確認分配並複製到日計畫」
+    if (item.type === 'week') {
+      const assignBtn = div.querySelector('.confirm-assign-btn');
+      if (assignBtn) {
+        assignBtn.addEventListener('click', async () => {
+          const checkedBoxes = div.querySelectorAll('.assign-check:checked');
+          const selectedDates = Array.from(checkedBoxes).map(cb => cb.value);
+          
+          if (selectedDates.length === 0) return alert('請先勾選想要分配的星期！');
+
+          // 把勾選的日子紀錄起來，以便後續判斷「全勾才完結」
+          await db.collection('users').doc(currentUser.uid).collection('pool').doc(item.id).update({
+            assignedDates: selectedDates,
+            completedDates: [] // 一開始完成的日子是空的
+          });
+
+          // 複製並匯入對應的各個日計畫中
+          for (const chosenDate of selectedDates) {
+            await addTaskWithDetails(chosenDate, item.text, item.color || 'none', item.note || '', item.id);
+          }
+          alert('已成功分配複製至指定日子！');
+          renderPoolUI();
+        });
       }
+    }
 
-      // 跑迴圈複製到指定的日期
-      for (const chosenDate of selectedDates) {
-        await addTask(chosenDate, item.text, item.color || 'none');
-      }
-
-      // 分配完後，把勾勾全部取消掉，並且任務繼續留著！
-      checkedBoxes.forEach(cb => cb.checked = false);
-    });
-
-    // 監聽刪除按鈕（按了才會從池子消失）
+    // 監聽刪除
     div.querySelector('.pool-item-del').addEventListener('click', async () => {
-      if(confirm('確定要刪除這個池子任務嗎？')) {
+      if(confirm('要刪除此池子任務嗎？')) {
         await db.collection('users').doc(currentUser.uid).collection('pool').doc(item.id).delete();
       }
     });
