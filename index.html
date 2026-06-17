@@ -422,10 +422,10 @@
         </div>
         <div class="pool-input-area">
           <div class="pool-input-row">
-            <input type="text" id="pool-task-input" placeholder="新增長效週計畫...">
+            <input type="text" id="pool-task-input" placeholder="新增週計畫...">
             <button id="pool-task-add-btn">注入</button>
           </div>
-          <input type="text" id="pool-task-note" class="pool-note-input" placeholder="📝 加上週計畫備註（選填）...">
+          <input type="text" id="pool-task-note" class="pool-note-input" placeholder="📝 備註...">
         </div>
         <div class="pool-list" id="pool-list"></div>
       </div>
@@ -466,14 +466,14 @@
           <div class="color-dot" data-color="purple" style="background:var(--tag-purple)"></div>
         </div>
         <div class="input-main-line">
-          <input type="text" id="new-task-input" placeholder="直接新增當天待辦清單...">
+          <input type="text" id="new-task-input" placeholder="待辦清單...">
           <button id="add-task-btn">新增</button>
         </div>
-        <input type="text" id="new-task-note" class="detail-note-input" placeholder="📝 加上今日清單備註（選填）...">
+        <input type="text" id="new-task-note" class="detail-note-input" placeholder="📝 備註...">
       </div>
 
       <div class="diary-section" style="margin-top:22px;">
-        <label>今日小日記</label>
+        <label>小日記</label>
         <textarea id="diary-textarea" placeholder="今天過得怎麼樣呢 ···"></textarea>
         <div class="save-indicator" id="save-indicator"></div>
       </div>
@@ -987,8 +987,8 @@ function renderPoolUI() {
       badgeHtml = `<span style="font-size:9px; background:#C75D3D; color:#fff; padding:1px 4px; border-radius:3px; margin-right:4px;">🎈 漂流泡泡</span>`;
     } else {
       badgeHtml = item.type === 'week' ? 
-        `<span style="font-size:9px; background:#7E8F9F; color:#fff; padding:1px 4px; border-radius:3px; margin-right:4px;">週計畫</span>` : 
-        `<span style="font-size:9px; background:#C2A675; color:#fff; padding:1px 4px; border-radius:3px; margin-right:4px;">日清單</span>`;
+        `<span style="font-size:9px; background:#7E8F9F; color:#fff; padding:1px 4px; border-radius:3px; margin-right:4px;">W</span>` : 
+        `<span style="font-size:9px; background:#C2A675; color:#fff; padding:1px 4px; border-radius:3px; margin-right:4px;">D</span>`;
     }
 
     div.innerHTML = `
@@ -1003,7 +1003,7 @@ function renderPoolUI() {
       
       ${item.type === 'week' && item.status !== 'completed' ? `
         <div class="assign-checkboxes" style="margin-top:6px; border-top:1px dashed var(--line); padding-top:6px;">
-          <div style="margin-bottom:4px; font-size:11px; color:var(--muted);">多選指派日程：</div>
+          <div style="margin-bottom:4px; font-size:11px; color:var(--muted);"> </div>
           ${checkboxesHtml}
           <div style="text-align:right; margin-top:6px;">
             <button class="confirm-assign-btn" style="font-size:10px; border:none; background:var(--ink); color:var(--bg); border-radius:4px; padding:2px 8px; cursor:pointer;">分配</button>
