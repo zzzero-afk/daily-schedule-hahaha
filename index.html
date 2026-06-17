@@ -669,16 +669,46 @@ function enableInlineNoteEdit(element, id, collectionType, dateStr = null, taskI
 /* 跨週未完成自動暴擊懲罰 -5 分 */
 async function checkAndCarryOverBubbles() {
   if (!currentUser) return;
+
+  // 1. 檢查現在的「當下時間」是不是已經跨過這週日的 23:59 了
+  const now = new Date();
+  const currentMon = getMondayOfWeek(anchorDate);
+  const currentSun = addDays(currentMon, 6);
+  currentSun.setHours(23, 59, 59, 999); // 鎖定本週日 23:59:59
+
+  // 💡 如果「現在時間」還沒到週日 23:59，就直接結束 function，什麼都不做！
+  // 這樣週間就不會跳泡泡，也不會扣分，完全留給你往後規劃的彈性。
+  if (now.getTime() < currentSun.getTime()) {
+    document.getElementById('bubble-banner').style.display = 'none';
+    return;
+  }
+
+  // 2. 如果時間真的超過週日 23:59 了，才開始統計並處理漂流泡泡
   const currentWeekId = getWeekIdentifier(anchorDate);
   const overdueTasks = globalPool.filter(item => item.status === 'pending' && item.weekId && item.weekId < currentWeekId);
-  if (overdueTasks.length === 0) { document.getElementById('bubble-banner').style.display = 'none'; return; }
+  
+  if (overdueTasks.length === 0) { 
+    document.getElementById('bubble-banner').style.display = 'none'; 
+    return; 
+  }
 
   const batch = db.batch();
+  const lastSundayStr = toDateStr(currentSun); // 扣分時間直接鎖定在週日當天
+
   for (const item of overdueTasks) {
-    batch.update(db.collection('users').doc(currentUser.uid).collection('pool').doc(item.id), { weekId: currentWeekId, isBubble: true });
-    await logScoreChange(-5, `週計畫「${item.text}」未落實跨週漂流`, toDateStr(anchorDate));
+    // 跨週沒做的，這時候才正式打上泡泡標籤，並滾動到新的一週
+    batch.update(db.collection('users').doc(currentUser.uid).collection('pool').doc(item.id), { 
+      weekId: currentWeekId, 
+      isBubble: true 
+    });
+    
+    // 這時候才真正扣分
+    await logScoreChange(-5, `週計畫「${item.text}」未落實，週日結算觸發漂流`, lastSundayStr);
   }
+  
   await batch.commit();
+  
+  // 顯示泡泡橫幅通知
   document.getElementById('bubble-banner').style.display = 'block';
   setTimeout(() => { document.getElementById('bubble-banner').style.display = 'none'; }, 5000);
 }
@@ -745,7 +775,7 @@ function renderPoolUI() {
 
     const displayNote = item.note ? `✐ ${item.note} ` : `✐ ...`;
     const noteSpanHtml = `<span class="editable-note-span" id="note-pool-${item.id}">${escapeHtml(displayNote)}</span>`;
-    let badgeHtml = item.isBubble ? `<span style="font-size:9px; background:#C75D3D; color:#fff; padding:1px 4px; border-radius:3px; margin-right:4px;">🎈 漂流泡泡 (-5)</span>` : '';
+    let badgeHtml = item.isBubble ? `<span style="font-size:9px; background:#C75D3D; color:#fff; padding:1px 4px; border-radius:3px; margin-right:4px;">🫧 漂流泡泡 (-5)</span>` : '';
 
     div.innerHTML = `
       <div style="display:flex; align-items:flex-start; padding-right:20px;">
