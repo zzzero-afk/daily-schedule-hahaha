@@ -664,6 +664,18 @@ function attachFirestoreListeners() {
     });
     updateMonthGoalUI();
   });
+  
+  // 4. 監聽本週池（全量撈取，改由前端依照 weekId 篩選，100% 不會因為缺少索引而 404/卡死！）
+  unsubscribePool = userDocRef.collection('pool').onSnapshot(snapshot => {
+    globalPool = [];
+    snapshot.forEach(doc => {
+      globalPool.push({ id: doc.id, ...doc.data() });
+    });
+    // 前端排序
+    globalPool.sort((a, b) => a.id.localeCompare(b.id));
+    // 直接觸發重新畫畫面
+    renderPoolUI();
+  });
 }
 
 function detachListeners() {
@@ -804,21 +816,29 @@ async function addPoolItem() {
 
 function renderPoolUI() {
   const container = document.getElementById('pool-list');
+  if (!container) return; // 安全防禦，免得找不到容器報錯
   container.innerHTML = '';
   
-  if (globalPool.length === 0) {
-    container.innerHTML = `<div style="font-size:12px; color:var(--muted); text-style:italic;">池子空空的，寫下任務吧！</div>`;
+  // 1. 算出當前是哪一週，並過濾出只屬於當週的任務！
+  const currentWeekId = getWeekIdentifier(anchorDate);
+  const thisWeekTasks = globalPool.filter(item => item.weekId === currentWeekId);
+
+  // 2. 這裡改成檢查 thisWeekTasks，空的時候顯示提示
+  if (thisWeekTasks.length === 0) {
+    container.innerHTML = `<div style="font-size:12px; color:var(--muted); font-style:italic;">當週池子空空的，寫下任務吧！</div>`;
     return;
   }
 
   const monday = getMondayOfWeek(anchorDate);
 
-  globalPool.forEach(item => {
+  // 3. 改用過濾後的 thisWeekTasks 來跑迴圈畫畫面
+  thisWeekTasks.forEach(item => {
     const div = document.createElement('div');
     div.className = 'pool-item';
-    div.style.borderLeftColor = MORANDI_COLORS[item.color || 'none'];
+    // 💡 修正小細節：用 borderLeft 才能完美上色喔！
+    div.style.borderLeft = `4px solid ${MORANDI_COLORS[item.color || 'none']}`;
     
-    // 生成分配下拉選單
+    // 生成分配下拉選單（這段跟你原本的一模一樣）
     let optionsHtml = `<option value="">📍 分配到日期...</option>`;
     for(let i=0; i<7; i++) {
       const targetDate = addDays(monday, i);
@@ -826,32 +846,33 @@ function renderPoolUI() {
       optionsHtml += `<option value="${dateStr}">${WEEKDAY_LABELS_SHORT[i]} (${targetDate.getDate()}日)</option>`;
     }
 
+    // 畫面結構（這段加上了剛才的多選 multiple 與分配按鈕）
     div.innerHTML = `
       <span class="pool-item-text">${escapeHtml(item.text)}</span>
-      <button class="pool-item-del">×</button>
-      <div class="assign-row">
-        <select class="assign-select">${optionsHtml}</select>
+      <button class="pool-item-del" style="position:absolute; right:6px; top:6px; border:none; background:transparent; color:var(--muted); cursor:pointer;">×</button>
+      <div class="assign-row" style="margin-top:4px; display:flex; gap:6px;">
+        <select class="assign-select" multiple style="font-size:11px; border:1px solid var(--line); border-radius:4px; padding:2px 4px; color:var(--muted); background:var(--card); cursor:pointer; height:60px;">
+          ${optionsHtml}
+        </select>
+        <button class="confirm-assign-btn" style="font-size:11px; border:none; background:var(--ink); color:var(--bg); border-radius:4px; padding:2px 8px; cursor:pointer;">分配</button>
       </div>
     `;
 
-    // 監聽多選分配按鈕
+    // 監聽多選分配按鈕（只複製，不刪除池子任務）
     div.querySelector('.confirm-assign-btn').addEventListener('click', async () => {
       const selectEl = div.querySelector('.assign-select');
       const selectedDates = Array.from(selectEl.selectedOptions).map(opt => opt.value).filter(val => val !== "");
       
       if (selectedDates.length === 0) return;
 
-      // 派發任務到被選中的那幾天
       for (const chosenDate of selectedDates) {
         await addTask(chosenDate, item.text, item.color || 'none');
       }
 
-      // 分配完後清空選取框，但不去 delete 資料庫
-      selectEl.selectedIndex = -1;
-      
-      // 💡 這樣任務就會一直留在當週的池子裡囉！
+      selectEl.selectedIndex = -1; // 分配完清空選取狀態
     });
 
+    // 監聽刪除按鈕（點擊選單右上角的 × 才會真正從池子移除）
     div.querySelector('.pool-item-del').addEventListener('click', async () => {
       await db.collection('users').doc(currentUser.uid).collection('pool').doc(item.id).delete();
     });
@@ -893,20 +914,8 @@ function renderCurrentView() {
   updateMonthGoalUI();
   updateWeekTitleUI();
   
-  // 🚨 每次切換週，都重新動態監聽「只屬於當週」的任務池
-  if (unsubscribePool) unsubscribePool(); // 先關掉上一次的監聽
-  const wId = getWeekIdentifier(anchorDate);
-  
-  unsubscribePool = db.collection('users').doc(currentUser.uid).collection('pool')
-    .where('weekId', '==', wId) // 👈 核心：只撈出這週的任務！
-    .onSnapshot(snapshot => {
-      globalPool = [];
-      snapshot.forEach(doc => {
-        globalPool.push({ id: doc.id, ...doc.data() });
-      });
-      globalPool.sort((a, b) => a.id.localeCompare(b.id)); // 前端排序
-      renderPoolUI();
-    });
+  // 只需要呼叫這一行，它就會自動去執行你「步驟 2」改好的前端過濾邏輯！
+  renderPoolUI(); 
 
   if (currentView === 'week') renderWeekKanbanView();
   else renderMonthView();
