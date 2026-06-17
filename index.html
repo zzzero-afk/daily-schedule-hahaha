@@ -337,6 +337,12 @@
         <div><span class="detail-date" id="detail-date-label"></span><span class="detail-sub" id="detail-dow-label"></span></div>
       </div>
 
+      <div style="margin-top: 10px; margin-bottom: 16px; background: #FFF5F5; padding: 12px; border-radius: 10px; border: 1px solid #FADBD8;">
+        <label style="font-size:12px; font-weight:700; color:#C0392B; display:block; margin-bottom:6px;">🎉 今日特殊日子 (如：生日、重要紀念日、考試)</label>
+        <input type="text" id="special-day-input" placeholder="例：朋友生日、期末考、機車路考..." style="width:100%; border:1px solid var(--line); border-radius:6px; padding:8px 10px; font-size:13.5px; outline:none; background:var(--card); box-sizing: border-box;">
+        <div class="save-indicator" id="special-day-indicator" style="text-align:right; font-size:11px; color:var(--muted); margin-top:2px;"></div>
+      </div>
+
       <div style="font-size:12px; font-weight:700; margin-bottom:6px; color:var(--muted);"></div>
       <div class="task-list" id="task-list"></div>
       
@@ -368,7 +374,6 @@
       </div>
     </div>
   </div>
-</div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -839,7 +844,15 @@ function renderWeekKanbanView() {
     const col = document.createElement('div'); col.className = 'kanban-col' + (isSameDay(d, today) ? ' is-today' : '');
     
     const header = document.createElement('div'); header.className = 'kanban-header';
-    header.innerHTML = `<span class="dow">${WEEKDAY_LABELS_SHORT[i]}</span><span class="num">${d.getDate()}</span>`;
+
+    // 💡 檢查有沒有設定特殊日子，有的話就做一個漂亮的小標籤
+    let specialDayBadgeHtml = '';
+    if (data.specialDay) {
+      specialDayBadgeHtml = `<div style="font-size:10.5px; background:#FADBD8; color:#C0392B; padding:2px 6px; border-radius:4px; margin-top:4px; font-weight:bold; display:inline-block; line-height:1.2; word-break:break-all;">🎉 ${escapeHtml(data.specialDay)}</div>`;
+    }
+  
+    // 把標籤塞進原本的 HTML 裡面（加在日期 num 的後面）
+    header.innerHTML = `<span class="dow">${WEEKDAY_LABELS_SHORT[i]}</span><span class="num">${d.getDate()}</span>${specialDayBadgeHtml}`;
     header.addEventListener('click', () => openDayDetail(dateStr));
 
     const taskListContainer = document.createElement('div'); taskListContainer.className = 'kanban-task-list';
@@ -915,6 +928,9 @@ function renderMonthView() {
 function openDayDetail(dateStr) { selectedDateStr = dateStr; renderDayDetail(dateStr); document.getElementById('day-detail').style.display = 'block'; document.getElementById('day-detail').scrollIntoView({ behavior:'smooth', block:'nearest' }); }
 document.getElementById('close-detail-btn').addEventListener('click', () => { document.getElementById('day-detail').style.display = 'none'; selectedDateStr = null; });
 
+// 宣告特殊日子的計時器變數（放在 function 外面才不會報錯）
+let specialDayTimer = null;
+
 function renderDayDetail(dateStr) {
   const d = fromDateStr(dateStr);
   document.getElementById('detail-date-label').textContent = `${d.getFullYear()}/${pad2(d.getMonth()+1)}/${pad2(d.getDate())}`;
@@ -922,7 +938,14 @@ function renderDayDetail(dateStr) {
 
   const data = getDayData(dateStr);
   
-  // 1. 渲染分配進來的任務
+  // 💡 【新增】讀取並同步「特殊日子」輸入框內容
+  const specialInput = document.getElementById('special-day-input');
+  if (document.activeElement !== specialInput) {
+    specialInput.value = data.specialDay || '';
+  }
+  document.getElementById('special-day-indicator').textContent = '';
+  
+  // 1. 渲染分配進來的任務 
   const tasks = data.tasks || []; const list = document.getElementById('task-list'); list.innerHTML = '';
   if (tasks.length === 0) {
     list.innerHTML = `<div style="font-size:12px; color:var(--muted); font-style:italic; padding:6px 0;">今天沒事做！</div>`;
@@ -933,7 +956,7 @@ function renderDayDetail(dateStr) {
       
       const displayNote = t.note ? `✐ ${t.note} (點擊編輯)` : `✐ 點擊添加備註...`;
       const noteSpanHtml = `<span class="editable-note-span" id="note-day-${t.id}">${escapeHtml(displayNote)}</span>`;
-      const postponeBtnHtml = (!t.done && !t.postponed) ? `<button class="postpone-btn" id="postpone-btn-${t.id}">⏭︎</button>` : '';
+      const postponeBtnHtml = (!t.done && !t.postponed) ? `<button class="postpone-btn" id="postpone-btn-${t.id}">▶︎▶︎</button>` : '';
 
       item.innerHTML = `
         <div class="task-checkbox${t.done ? ' checked' : ''}"></div>
@@ -956,7 +979,7 @@ function renderDayDetail(dateStr) {
     });
   }
 
-  // 2. 💸 渲染今日記帳列表
+  // 2. 💸 渲染今日記帳列表 (完美保留你改的「今天沒有花錢」)
   const ledger = data.ledger || []; const ledgerListEl = document.getElementById('ledger-list'); ledgerListEl.innerHTML = '';
   let totalSpend = ledger.reduce((sum, item) => sum + (item.amount || 0), 0);
   document.getElementById('detail-day-spend-total').textContent = `共 $${totalSpend}`;
@@ -992,6 +1015,18 @@ function scheduleDiarySave(dateStr, text) {
   }, 800);
 }
 
+/* 💡 【新增】自動儲存特殊日子的監聽事件 */
+document.getElementById('special-day-input').addEventListener('input', e => {
+  if (!selectedDateStr) return;
+  clearTimeout(specialDayTimer);
+  const indicator = document.getElementById('special-day-indicator');
+  indicator.textContent = '自動同步中···';
+  specialDayTimer = setTimeout(async () => {
+    await db.collection('users').doc(currentUser.uid).collection('days').doc(selectedDateStr).set({ specialDay: e.target.value.trim() }, { merge: true });
+    indicator.textContent = '已記錄 ✓';
+  }, 800);
+});
+
 /* 自動儲存月目標 */
 document.getElementById('month-goal-input').addEventListener('input', (e) => {
   clearTimeout(monthGoalTimer); const mStr = toMonthStr(anchorDate); const indicator = document.getElementById('month-goal-indicator'); indicator.textContent = '同步中...';
@@ -1000,7 +1035,6 @@ document.getElementById('month-goal-input').addEventListener('input', (e) => {
     indicator.textContent = '儲存成功'; setTimeout(() => { indicator.textContent = ''; }, 1500);
   }, 800);
 });
-
 function updateMonthGoalUI() {
   const mStr = toMonthStr(anchorDate); const tx = document.getElementById('month-goal-input');
   if (document.activeElement !== tx) { tx.value = (monthsMeta[mStr] && monthsMeta[mStr].goal) ? monthsMeta[mStr].goal : ''; }
