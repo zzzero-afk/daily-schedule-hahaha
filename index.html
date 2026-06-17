@@ -664,16 +664,6 @@ function attachFirestoreListeners() {
     });
     updateMonthGoalUI();
   });
-
-  // 4. 監聽本週池（修正版）
-  unsubscribePool = userDocRef.collection('pool').onSnapshot(snapshot => {
-    globalPool = [];
-    snapshot.forEach(doc => {
-      globalPool.push({ id: doc.id, ...doc.data() });
-    });
-    globalPool.sort((a, b) => a.id.localeCompare(b.id)); 
-    renderPoolUI();
-  });
 }
 
 function detachListeners() {
@@ -799,9 +789,14 @@ async function addPoolItem() {
   const input = document.getElementById('pool-task-input');
   const txt = input.value.trim();
   if(!txt) return;
+
+  // 🚨 關鍵：自動算出當前畫面是哪一週
+  const wId = getWeekIdentifier(anchorDate);
+
   await db.collection('users').doc(currentUser.uid).collection('pool').add({
     text: txt,
     color: selectedPoolColor,
+    weekId: wId, // 👈 幫這筆任務貼上這週的標籤！
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
   });
   input.value = '';
@@ -839,14 +834,22 @@ function renderPoolUI() {
       </div>
     `;
 
-    // 監聽分配行為 (連動傳送)
-    div.querySelector('.assign-select').addEventListener('change', async (e) => {
-      const chosenDate = e.target.value;
-      if(!chosenDate) return;
-      // 1. 複製派發到每日待辦清單
-      await addTask(chosenDate, item.text, item.color || 'none');
-      // 2. 從本週池中移除
-      await db.collection('users').doc(currentUser.uid).collection('pool').doc(item.id).delete();
+    // 監聽多選分配按鈕
+    div.querySelector('.confirm-assign-btn').addEventListener('click', async () => {
+      const selectEl = div.querySelector('.assign-select');
+      const selectedDates = Array.from(selectEl.selectedOptions).map(opt => opt.value).filter(val => val !== "");
+      
+      if (selectedDates.length === 0) return;
+
+      // 派發任務到被選中的那幾天
+      for (const chosenDate of selectedDates) {
+        await addTask(chosenDate, item.text, item.color || 'none');
+      }
+
+      // 分配完後清空選取框，但不去 delete 資料庫
+      selectEl.selectedIndex = -1;
+      
+      // 💡 這樣任務就會一直留在當週的池子裡囉！
     });
 
     div.querySelector('.pool-item-del').addEventListener('click', async () => {
@@ -889,7 +892,22 @@ function renderCurrentView() {
   if (!currentUser) return;
   updateMonthGoalUI();
   updateWeekTitleUI();
-  renderPoolUI();
+  
+  // 🚨 每次切換週，都重新動態監聽「只屬於當週」的任務池
+  if (unsubscribePool) unsubscribePool(); // 先關掉上一次的監聽
+  const wId = getWeekIdentifier(anchorDate);
+  
+  unsubscribePool = db.collection('users').doc(currentUser.uid).collection('pool')
+    .where('weekId', '==', wId) // 👈 核心：只撈出這週的任務！
+    .onSnapshot(snapshot => {
+      globalPool = [];
+      snapshot.forEach(doc => {
+        globalPool.push({ id: doc.id, ...doc.data() });
+      });
+      globalPool.sort((a, b) => a.id.localeCompare(b.id)); // 前端排序
+      renderPoolUI();
+    });
+
   if (currentView === 'week') renderWeekKanbanView();
   else renderMonthView();
 }
