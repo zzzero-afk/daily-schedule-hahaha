@@ -14,7 +14,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght=500;700&family=Noto+Sans+TC:wght=400;500;700&display=swap" rel="stylesheet">
 
 <style>
   :root{
@@ -154,14 +154,17 @@
   .kanban-header { text-align: center; border-bottom: 1px solid var(--line); padding-bottom: 8px; margin-bottom: 10px; cursor: pointer; }
   .kanban-header .dow { font-size: 11px; color: var(--muted); display: block; font-weight: 500; }
   .kanban-header .num { font-size: 16px; font-weight: 700; font-family: 'Noto Serif TC', serif; }
-  .kanban-col.is-today .kanban-header .num { color: var(--bg); background: var(--accent); border-radius: 50%; width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; }
+  .kanban-col.is-today .kanban-header .num { color: var(--bg); background: var(--accent); border-radius: 50%; width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; }
 
   .kanban-task-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; cursor: pointer; }
   .kanban-task-item { background: var(--bg); padding: 6px 8px; border-radius: 6px; font-size: 12.5px; display: flex; gap: 6px; align-items: flex-start; border-left: 3px solid var(--tag-none); }
   .kanban-task-item.done { opacity: 0.55; }
   .kanban-task-item.postponed { opacity: 0.5; background: #ECEAE6; border-left-style: dashed; }
-  .kanban-task-item .dot-indicator { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); margin-top: 6px; flex-shrink: 0; }
+  
+  /* 💡【修改1】將任務前面的圓點統一固定為深灰色（接近黑色） */
+  .kanban-task-item .dot-indicator { width: 5px; height: 5px; border-radius: 50%; background: var(--ink); margin-top: 6px; flex-shrink: 0; }
   .kanban-task-item.done .dot-indicator { background: var(--done); }
+  
   .kanban-task-item .text-span { flex: 1; word-break: break-word; line-height: 1.35; }
   .kanban-task-item.done .text-span { text-decoration: line-through; color: var(--done); }
 
@@ -243,7 +246,7 @@
 <div id="login-screen" style="display:none;">
   <div class="brand-mark">JOURNAL · PLANNER</div>
   <h1>P人消滅計畫</h1>
-  <p>procrastination<br><i>noun[U]</i><br>We need decisive action.</p>
+  <h4>procrastination</h4><p><i>noun[U]</i><br>We need decisive action.</p>
   <button class="google-btn" id="google-login-btn">
     <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.9 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.5 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 16 19 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.5 29.6 4 24 4c-7.4 0-13.8 4.2-17 10.7z"/><path fill="#4CAF50" d="M24 44c5.4 0 10.3-2.1 14-5.5l-6.5-5.4C29.4 35 26.8 36 24 36c-5.3 0-9.7-3.1-11.3-7.6l-6.6 5.1C9.9 39.7 16.4 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-1.1 3.1-3.4 5.6-6.3 7.1l6.5 5.4C39.5 37.2 44 31.5 44 24c0-1.3-.1-2.7-.4-3.5z"/></svg>
     使用 Google 帳號登入
@@ -279,7 +282,7 @@
     <div class="week-title-area" id="week-title-container">
       <span class="week-title-display" id="week-title-text">點擊命名</span>
       <input type="text" class="week-title-input" id="week-title-input" placeholder="例：開學週">
-      <button class="week-title-btn" id="week-title-edit-btn">🖉</button>
+      <button class="week-title-btn" id="week-title-edit-btn">✏︎</button>
     </div>
   </div>
 
@@ -347,9 +350,15 @@
         <div><span class="detail-date" id="detail-date-label"></span><span class="detail-sub" id="detail-dow-label"></span></div>
       </div>
 
+      <!-- 💡【修改2】調整大事新增區塊：加入「日子 / 行程」分類下拉選單 -->
       <div style="margin-top: 10px; margin-bottom: 16px; background: #FFF9F5; padding: 12px; border-radius: 10px; border: 1px solid #F5E6DA;">
+        <label style="font-size:12px; font-weight:700; color:#C75D3D; display:block; margin-bottom:6px;">✨ 今日特殊大事 (可新增多個)</label>
         <div style="display: flex; gap: 6px; margin-bottom: 10px;">
-          <input type="text" id="special-day-input" placeholder="✨今日大事" style="flex: 1; border:1px solid var(--line); border-radius:6px; padding:8px 10px; font-size:13.5px; outline:none; background:var(--card); box-sizing: border-box;">
+          <select id="special-day-type" style="border:1px solid var(--line); border-radius:6px; padding:8px; font-size:13px; background:var(--card); outline:none;">
+            <option value="day">✨ 日子</option>
+            <option value="event">📅 行程</option>
+          </select>
+          <input type="text" id="special-day-input" placeholder="例：朋友生日、期末考、晚餐聚會..." style="flex: 1; border:1px solid var(--line); border-radius:6px; padding:8px 10px; font-size:13.5px; outline:none; background:var(--card); box-sizing: border-box;">
           <button id="add-special-day-btn" style="border: none; background: #C75D3D; color: #fff; border-radius: 6px; padding: 0 14px; font-size: 13px; cursor: pointer;">新增</button>
         </div>
         <div id="special-days-list" style="display: flex; flex-direction: column; gap: 5px;"></div>
@@ -744,11 +753,12 @@ async function deleteLedgerItem(itemId) {
 }
 
 /* ============================================================
-   ✨ 特殊日子多筆增刪邏輯
+   ✨ 特殊大事多筆增刪邏輯 (包含 日子 / 行程 分類)
    ============================================================ */
 async function addSpecialDayItem() {
   if (!selectedDateStr) return;
   const input = document.getElementById('special-day-input');
+  const typeSelect = document.getElementById('special-day-type');
   const text = input.value.trim();
   if (!text) return;
 
@@ -757,12 +767,13 @@ async function addSpecialDayItem() {
   
   // 舊資料相容處理
   if (data.specialDay && specialDays.length === 0) {
-    specialDays.push({ id: 'sp_old', text: data.specialDay });
+    specialDays.push({ id: 'sp_old', text: data.specialDay, type: 'day' });
   }
 
   const newItem = {
     id: 'sp_' + Date.now().toString(36) + Math.random().toString(36).slice(2,4),
-    text: text
+    text: text,
+    type: typeSelect.value // 'day' 為日子，'event' 為行程
   };
 
   specialDays.push(newItem);
@@ -884,16 +895,20 @@ function renderWeekKanbanView() {
     const col = document.createElement('div'); col.className = 'kanban-col' + (isSameDay(d, today) ? ' is-today' : '');
     const header = document.createElement('div'); header.className = 'kanban-header';
 
-    // 週看板：支援多筆特殊日子標籤顯示
+    // 週看板：渲染多筆大事標籤（依分類變更文字顏色）
     let specialDayBadgeHtml = '';
     let weekSpDays = [];
     if (Array.isArray(data.specialDays)) weekSpDays = data.specialDays;
-    else if (data.specialDay) weekSpDays = [{ text: data.specialDay }];
+    else if (data.specialDay) weekSpDays = [{ text: data.specialDay, type: 'day' }];
 
     if (weekSpDays.length > 0) {
       specialDayBadgeHtml = `<div style="display:flex; flex-direction:column; gap:2px; margin-top:4px;">`;
       weekSpDays.forEach(sp => {
-        specialDayBadgeHtml += `<div style="font-size:10.5px; background:#EADDD6; color:#C75D3D; padding:1px 5px; border-radius:4px; font-weight:bold; display:inline-block; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">✨ ${escapeHtml(sp.text)}</div>`;
+        // 💡【修改3】判斷類型：day (日子) 顯示橘色文字；event (行程) 顯示黑色文字
+        const textColor = sp.type === 'event' ? 'var(--ink)' : '#C75D3D';
+        const prefix = sp.type === 'event' ? '📅' : '✨';
+        
+        specialDayBadgeHtml += `<div style="font-size:10.5px; background:#EADDD6; color:${textColor}; padding:1px 5px; border-radius:4px; font-weight:bold; display:inline-block; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${prefix} ${escapeHtml(sp.text)}</div>`;
       });
       specialDayBadgeHtml += `</div>`;
     }
@@ -978,20 +993,24 @@ function renderMonthView() {
       dayDiv.classList.add('today-active');
     }
 
-    // 月檢視：支援多筆特殊日子標籤疊加顯示
+    // 月檢視：渲染多筆大事標籤（依分類變更文字顏色）
     let specialDayHtml = '';
     let monthSpDays = [];
     if (data && Array.isArray(data.specialDays)) monthSpDays = data.specialDays;
-    else if (data && data.specialDay) monthSpDays = [{ text: data.specialDay }];
+    else if (data && data.specialDay) monthSpDays = [{ text: data.specialDay, type: 'day' }];
 
     if (monthSpDays.length > 0) {
       specialDayHtml = `<div style="display:flex; flex-direction:column; gap:2px; margin-top:2px; width:100%; box-sizing:border-box; overflow:hidden;">`;
       monthSpDays.forEach(sp => {
+        // 💡【修改4】判斷類型：day (日子) 顯示橘色文字；event (行程) 顯示黑色文字
+        const textColor = sp.type === 'event' ? 'var(--ink)' : '#C75D3D';
+        const prefix = sp.type === 'event' ? '📅' : '✨';
+
         specialDayHtml += `
           <div style="
             font-size: 9.5px; 
             background: #FFF9F5; 
-            color: #C75D3D; 
+            color: ${textColor}; 
             padding: 1px 3px; 
             border-radius: 3px; 
             font-weight: bold; 
@@ -1002,7 +1021,7 @@ function renderMonthView() {
             width: 100%;
             box-sizing: border-box;
           " title="${escapeHtml(sp.text)}">
-            ✨ ${escapeHtml(sp.text)}
+            ${prefix} ${escapeHtml(sp.text)}
           </div>
         `;
       });
@@ -1040,7 +1059,7 @@ function renderDayDetail(dateStr) {
 
   const data = getDayData(dateStr);
   
-  // 日詳情：渲染「多筆特殊日子」清單
+  // 日詳情：渲染多筆大事清單（依分類變更文字顏色）
   const specialListEl = document.getElementById('special-days-list');
   specialListEl.innerHTML = '';
 
@@ -1048,16 +1067,20 @@ function renderDayDetail(dateStr) {
   if (Array.isArray(data.specialDays)) {
     specialDays = data.specialDays;
   } else if (data.specialDay) {
-    specialDays = [{ id: 'sp_old', text: data.specialDay }];
+    specialDays = [{ id: 'sp_old', text: data.specialDay, type: 'day' }];
   }
 
   if (specialDays.length === 0) {
     specialListEl.innerHTML = `<div style="font-size:11px; color:var(--muted); font-style:italic;">今天是一般的小日子。</div>`;
   } else {
     specialDays.forEach(item => {
+      // 💡【修改5】判斷類型：day (日子) 顯示橘色文字；event (行程) 顯示黑色文字
+      const textColor = item.type === 'event' ? 'var(--ink)' : '#C75D3D';
+      const prefix = item.type === 'event' ? '📅' : '✨';
+
       const spDiv = document.createElement('div');
       spDiv.style = "display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 4px 8px; border-radius: 4px; font-size: 12.5px; border: 1px solid #F5E6DA;";
-      spDiv.innerHTML = `<span style="color: #C75D3D; font-weight: 500;">✨ ${escapeHtml(item.text)}</span><button class="del-sp" style="border:none; background:transparent; color:var(--muted); cursor:pointer; font-size:14px;">×</button>`;
+      spDiv.innerHTML = `<span style="color: ${textColor}; font-weight: 500;">${prefix} ${escapeHtml(item.text)}</span><button class="del-sp" style="border:none; background:transparent; color:var(--muted); cursor:pointer; font-size:14px;">×</button>`;
       spDiv.querySelector('.del-sp').addEventListener('click', () => deleteSpecialDayItem(item.id));
       specialListEl.appendChild(spDiv);
     });
@@ -1071,7 +1094,7 @@ function renderDayDetail(dateStr) {
       const item = document.createElement('div'); item.className = 'task-item';
       item.style.borderLeft = `3px solid ${MORANDI_COLORS[t.color || 'none']}`; 
       
-      const displayNote = t.note ? `✐ ${t.note} (點擊編輯)` : `✐`;
+      const displayNote = t.note ? `✐ ${t.note}` : `✐`;
       const noteSpanHtml = `<span class="editable-note-span" id="note-day-${t.id}">${escapeHtml(displayNote)}</span>`;
       const postponeBtnHtml = (!t.done && !t.postponed) ? `<button class="postpone-btn" id="postpone-btn-${t.id}">▶︎▶︎</button>` : '';
 
@@ -1177,7 +1200,7 @@ weekTitleInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') saveWe
 async function saveWeekTitle() {
   const wId = getWeekIdentifier(anchorDate); const val = weekTitleInput.value.trim();
   await db.collection('users').doc(currentUser.uid).collection('weeks').doc(wId).set({ title: val });
-  weekTitleInput.style.display = 'none'; weekTitleText.style.display = 'inline-block'; editWeekBtn.textContent = '🖉';
+  weekTitleInput.style.display = 'none'; weekTitleText.style.display = 'inline-block'; editWeekBtn.textContent = '✏︎';
 }
 function updateWeekTitleUI() {
   const wId = getWeekIdentifier(anchorDate);
