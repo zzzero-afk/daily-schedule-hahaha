@@ -161,7 +161,6 @@
   .kanban-task-item.done { opacity: 0.55; }
   .kanban-task-item.postponed { opacity: 0.5; background: #ECEAE6; border-left-style: dashed; }
   
-  /* 💡【修改1】將任務前面的圓點統一固定為深灰色（接近黑色） */
   .kanban-task-item .dot-indicator { width: 5px; height: 5px; border-radius: 50%; background: var(--ink); margin-top: 6px; flex-shrink: 0; }
   .kanban-task-item.done .dot-indicator { background: var(--done); }
   
@@ -350,13 +349,13 @@
         <div><span class="detail-date" id="detail-date-label"></span><span class="detail-sub" id="detail-dow-label"></span></div>
       </div>
 
-      <!-- 💡【修改2】調整大事新增區塊：加入「日子 / 行程」分類下拉選單 -->
       <div style="margin-top: 10px; margin-bottom: 16px; background: #FFF9F5; padding: 12px; border-radius: 10px; border: 1px solid #F5E6DA;">
         <label style="font-size:12px; font-weight:700; color:#C75D3D; display:block; margin-bottom:6px;">✨ 今日特殊大事 (可新增多個)</label>
         <div style="display: flex; gap: 6px; margin-bottom: 10px;">
           <select id="special-day-type" style="border:1px solid var(--line); border-radius:6px; padding:8px; font-size:13px; background:var(--card); outline:none;">
             <option value="day">✨ 日子</option>
             <option value="event">📅 行程</option>
+            <option value="period">🩸 月經</option>
           </select>
           <input type="text" id="special-day-input" placeholder="例：朋友生日、期末考、晚餐聚會..." style="flex: 1; border:1px solid var(--line); border-radius:6px; padding:8px 10px; font-size:13.5px; outline:none; background:var(--card); box-sizing: border-box;">
           <button id="add-special-day-btn" style="border: none; background: #C75D3D; color: #fff; border-radius: 6px; padding: 0 14px; font-size: 13px; cursor: pointer;">新增</button>
@@ -485,17 +484,10 @@ function updateGlobalStatsUI() {
   if (!currentUser) return;
   const currentMonthStr = toMonthStr(anchorDate);
   document.getElementById('score-month-label').textContent = `${anchorDate.getMonth()+1}月 戰力值`;
-  
-  const currentMon = getMondayOfWeek(anchorDate);
-  const currentSun = addDays(currentMon, 6);
-  currentSun.setHours(23, 59, 59, 999);
-  const sundayDeadline = currentSun.getTime();
 
+  // 💡【修改1】移除原本對週日的過濾限制，讓戰力值固定保持為最新即時狀態
   const monthlyPoints = scoreLogs
-    .filter(log => {
-      const logTime = log.timestamp ? log.timestamp.toDate().getTime() : Date.now();
-      return log.monthStr === currentMonthStr && logTime <= sundayDeadline;
-    })
+    .filter(log => log.monthStr === currentMonthStr)
     .reduce((sum, log) => sum + log.points, 0);
 
   const scoreDisplay = document.getElementById('total-score-display');
@@ -635,7 +627,7 @@ async function postponeTaskToTomorrow(dateStr, taskId) {
   });
   if (!taskToMove) return;
 
-  await db.collection('users').doc(currentUser.uid).collection('days').doc(dateStr).set({ tasks }, { merge: true });
+  await db.collection('users').doc(currentDateStr).set({ tasks }, { merge: true });
   const tomorrowStr = toDateStr(addDays(fromDateStr(dateStr), 1));
   await addDistributedTask(tomorrowStr, `[續] ${taskToMove.text}`, taskToMove.color, taskToMove.note, taskToMove.parentId);
   
@@ -699,6 +691,7 @@ async function checkAndCarryOverBubbles() {
   }
 
   const currentWeekId = getWeekIdentifier(anchorDate);
+  // 💡【修改2】調整條件為只要未完成且小於當前週別，就可以觸發連續漂流機制與扣分
   const overdueTasks = globalPool.filter(item => item.status === 'pending' && item.weekId && item.weekId < currentWeekId);
   
   if (overdueTasks.length === 0) { 
@@ -753,7 +746,7 @@ async function deleteLedgerItem(itemId) {
 }
 
 /* ============================================================
-   ✨ 特殊大事多筆增刪邏輯 (包含 日子 / 行程 分類)
+   ✨ 特殊大事多筆增刪邏輯 (包含 日子 / 行程 / 月經 分類)
    ============================================================ */
 async function addSpecialDayItem() {
   if (!selectedDateStr) return;
@@ -765,7 +758,6 @@ async function addSpecialDayItem() {
   const data = getDayData(selectedDateStr);
   let specialDays = Array.isArray(data.specialDays) ? data.specialDays : [];
   
-  // 舊資料相容處理
   if (data.specialDay && specialDays.length === 0) {
     specialDays.push({ id: 'sp_old', text: data.specialDay, type: 'day' });
   }
@@ -773,7 +765,7 @@ async function addSpecialDayItem() {
   const newItem = {
     id: 'sp_' + Date.now().toString(36) + Math.random().toString(36).slice(2,4),
     text: text,
-    type: typeSelect.value // 'day' 為日子，'event' 為行程
+    type: typeSelect.value // 'day' 為日子，'event' 為行程，'period' 為月經
   };
 
   specialDays.push(newItem);
@@ -895,7 +887,6 @@ function renderWeekKanbanView() {
     const col = document.createElement('div'); col.className = 'kanban-col' + (isSameDay(d, today) ? ' is-today' : '');
     const header = document.createElement('div'); header.className = 'kanban-header';
 
-    // 週看板：渲染多筆大事標籤（依分類變更文字顏色）
     let specialDayBadgeHtml = '';
     let weekSpDays = [];
     if (Array.isArray(data.specialDays)) weekSpDays = data.specialDays;
@@ -904,11 +895,20 @@ function renderWeekKanbanView() {
     if (weekSpDays.length > 0) {
       specialDayBadgeHtml = `<div style="display:flex; flex-direction:column; gap:2px; margin-top:4px;">`;
       weekSpDays.forEach(sp => {
-        // 💡【修改3】判斷類型：day (日子) 顯示橘色文字；event (行程) 顯示黑色文字
-        const textColor = sp.type === 'event' ? 'var(--ink)' : '#C75D3D';
-        const prefix = sp.type === 'event' ? '📅' : '✨';
+        // 💡【修改3】整合月經標籤：月經為暗紅色調、行程為黑色調、日子為經典暖橘調
+        let textColor = '#C75D3D';
+        let prefix = '✨';
+        let bgStyle = 'background:#EADDD6;';
+        if (sp.type === 'event') {
+          textColor = 'var(--ink)';
+          prefix = '📅';
+        } else if (sp.type === 'period') {
+          textColor = '#A63F3F';
+          prefix = '🩸';
+          bgStyle = 'background:#FCE8E6;';
+        }
         
-        specialDayBadgeHtml += `<div style="font-size:10.5px; background:#EADDD6; color:${textColor}; padding:1px 5px; border-radius:4px; font-weight:bold; display:inline-block; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${prefix} ${escapeHtml(sp.text)}</div>`;
+        specialDayBadgeHtml += `<div style="font-size:10.5px; ${bgStyle} color:${textColor}; padding:1px 5px; border-radius:4px; font-weight:bold; display:inline-block; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${prefix} ${escapeHtml(sp.text)}</div>`;
       });
       specialDayBadgeHtml += `</div>`;
     }
@@ -993,7 +993,6 @@ function renderMonthView() {
       dayDiv.classList.add('today-active');
     }
 
-    // 月檢視：渲染多筆大事標籤（依分類變更文字顏色）
     let specialDayHtml = '';
     let monthSpDays = [];
     if (data && Array.isArray(data.specialDays)) monthSpDays = data.specialDays;
@@ -1002,14 +1001,23 @@ function renderMonthView() {
     if (monthSpDays.length > 0) {
       specialDayHtml = `<div style="display:flex; flex-direction:column; gap:2px; margin-top:2px; width:100%; box-sizing:border-box; overflow:hidden;">`;
       monthSpDays.forEach(sp => {
-        // 💡【修改4】判斷類型：day (日子) 顯示橘色文字；event (行程) 顯示黑色文字
-        const textColor = sp.type === 'event' ? 'var(--ink)' : '#C75D3D';
-        const prefix = sp.type === 'event' ? '📅' : '✨';
+        // 💡【修改4】月檢視同步支援月經樣式顯示
+        let textColor = '#C75D3D';
+        let prefix = '✨';
+        let bgStyle = 'background: #FFF9F5; border: 1px solid #F5E6DA;';
+        if (sp.type === 'event') {
+          textColor = 'var(--ink)';
+          prefix = '📅';
+        } else if (sp.type === 'period') {
+          textColor = '#A63F3F';
+          prefix = '🩸';
+          bgStyle = 'background: #FCE8E6; border: 1px solid #F7D4D1;';
+        }
 
         specialDayHtml += `
           <div style="
             font-size: 9.5px; 
-            background: #FFF9F5; 
+            ${bgStyle}
             color: ${textColor}; 
             padding: 1px 3px; 
             border-radius: 3px; 
@@ -1017,7 +1025,6 @@ function renderMonthView() {
             text-overflow: ellipsis; 
             overflow: hidden; 
             white-space: nowrap;
-            border: 1px solid #F5E6DA;
             width: 100%;
             box-sizing: border-box;
           " title="${escapeHtml(sp.text)}">
@@ -1059,7 +1066,6 @@ function renderDayDetail(dateStr) {
 
   const data = getDayData(dateStr);
   
-  // 日詳情：渲染多筆大事清單（依分類變更文字顏色）
   const specialListEl = document.getElementById('special-days-list');
   specialListEl.innerHTML = '';
 
@@ -1074,12 +1080,21 @@ function renderDayDetail(dateStr) {
     specialListEl.innerHTML = `<div style="font-size:11px; color:var(--muted); font-style:italic;">今天是一般的小日子。</div>`;
   } else {
     specialDays.forEach(item => {
-      // 💡【修改5】判斷類型：day (日子) 顯示橘色文字；event (行程) 顯示黑色文字
-      const textColor = item.type === 'event' ? 'var(--ink)' : '#C75D3D';
-      const prefix = item.type === 'event' ? '📅' : '✨';
+      // 💡【修改5】今日大事情形下渲染月經紀錄格式
+      let textColor = '#C75D3D';
+      let prefix = '✨';
+      let bgStyle = 'background: #fff; border: 1px solid #F5E6DA;';
+      if (item.type === 'event') {
+        textColor = 'var(--ink)';
+        prefix = '📅';
+      } else if (item.type === 'period') {
+        textColor = '#A63F3F';
+        prefix = '🩸';
+        bgStyle = 'background: #FCE8E6; border: 1px solid #F7D4D1;';
+      }
 
       const spDiv = document.createElement('div');
-      spDiv.style = "display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 4px 8px; border-radius: 4px; font-size: 12.5px; border: 1px solid #F5E6DA;";
+      spDiv.style = `display: flex; justify-content: space-between; align-items: center; ${bgStyle} padding: 4px 8px; border-radius: 4px; font-size: 12.5px;`;
       spDiv.innerHTML = `<span style="color: ${textColor}; font-weight: 500;">${prefix} ${escapeHtml(item.text)}</span><button class="del-sp" style="border:none; background:transparent; color:var(--muted); cursor:pointer; font-size:14px;">×</button>`;
       spDiv.querySelector('.del-sp').addEventListener('click', () => deleteSpecialDayItem(item.id));
       specialListEl.appendChild(spDiv);
