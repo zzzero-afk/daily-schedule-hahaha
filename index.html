@@ -280,7 +280,7 @@
 
     <div class="week-title-area" id="week-title-container">
       <span class="week-title-display" id="week-title-text">點擊命名</span>
-      <input type="text" class="week-title-input" id="week-title-input" placeholder="例：開學週">
+      <input type="text" class="week-title-input" id="week-title-input" placeholder="···">
       <button class="week-title-btn" id="week-title-edit-btn">✏︎</button>
     </div>
   </div>
@@ -301,7 +301,7 @@
 
       <div class="panel-card">
         <h3>本月目標</h3>
-        <textarea class="month-goal-textarea" id="month-goal-input" placeholder="寫下這個月的核心目標與願景 ···"></textarea>
+        <textarea class="month-goal-textarea" id="month-goal-input" placeholder="這個月···"></textarea>
         <div class="save-indicator" id="month-goal-indicator" style="text-align:right;"></div>
       </div>
 
@@ -319,10 +319,10 @@
         </div>
         <div class="pool-input-area">
           <div class="pool-input-row">
-            <input type="text" id="pool-task-input" placeholder="輸入計畫 ···">
+            <input type="text" id="pool-task-input" placeholder="計畫···">
             <button id="pool-task-add-btn">注入</button>
           </div>
-          <input type="text" id="pool-task-note" class="pool-note-input" placeholder=" 備註 ···">
+          <input type="text" id="pool-task-note" class="pool-note-input" placeholder=" 備註···">
         </div>
         <div class="pool-list" id="pool-list"></div>
       </div>
@@ -350,14 +350,14 @@
       </div>
 
       <div style="margin-top: 10px; margin-bottom: 16px; background: #FFF9F5; padding: 12px; border-radius: 10px; border: 1px solid #F5E6DA;">
-        <label style="font-size:12px; font-weight:700; color:#C75D3D; display:block; margin-bottom:6px;">✨ 今日特殊大事 (可新增多個)</label>
+        <label style="font-size:12px; font-weight:700; color:#C75D3D; display:block; margin-bottom:6px;">✨ 今日特殊大事</label>
         <div style="display: flex; gap: 6px; margin-bottom: 10px;">
           <select id="special-day-type" style="border:1px solid var(--line); border-radius:6px; padding:8px; font-size:13px; background:var(--card); outline:none;">
             <option value="day">✨ 日子</option>
             <option value="event">📅 行程</option>
             <option value="period">🩸 月經</option>
           </select>
-          <input type="text" id="special-day-input" placeholder="例：朋友生日、期末考、晚餐聚會..." style="flex: 1; border:1px solid var(--line); border-radius:6px; padding:8px 10px; font-size:13.5px; outline:none; background:var(--card); box-sizing: border-box;">
+          <input type="text" id="special-day-input" placeholder="..." style="flex: 1; border:1px solid var(--line); border-radius:6px; padding:8px 10px; font-size:13.5px; outline:none; background:var(--card); box-sizing: border-box;">
           <button id="add-special-day-btn" style="border: none; background: #C75D3D; color: #fff; border-radius: 6px; padding: 0 14px; font-size: 13px; cursor: pointer;">新增</button>
         </div>
         <div id="special-days-list" style="display: flex; flex-direction: column; gap: 5px;"></div>
@@ -822,7 +822,7 @@ function renderPoolUI() {
         </label>`;
     }
 
-    const displayNote = item.note ? `✐ ${item.note} ` : `✐  ···`;
+    const displayNote = item.note ? `✐ ${item.note} ` : `✐ ···`;
     const noteSpanHtml = `<span class="editable-note-span" id="note-pool-${item.id}">${escapeHtml(displayNote)}</span>`;
     let badgeHtml = item.isBubble ? `<span style="font-size:9px; background:#C75D3D; color:#fff; padding:1px 4px; border-radius:3px; margin-right:4px;">🫧 漂流泡泡 －５</span>` : '';
 
@@ -925,7 +925,7 @@ function renderWeekKanbanView() {
       tasks.forEach(t => {
         const item = document.createElement('div'); item.className = 'kanban-task-item' + (t.done ? ' done' : '') + (t.postponed ? ' postponed' : '');
         item.style.borderLeftColor = MORANDI_COLORS[t.color || 'none'];
-        item.innerHTML = `<span class="dot-indicator"></span><span class="text-span">${escapeHtml(t.text)}${t.note ? ' ✐':''}${t.postponed ? ' ↪️':''}</span>`;
+        item.innerHTML = `<span class="text-span">${escapeHtml(t.text)}</span>`;
         taskListContainer.appendChild(item);
       });
     }
