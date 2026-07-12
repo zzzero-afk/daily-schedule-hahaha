@@ -1,7 +1,7 @@
 {
-  "name": "手帳 · 我的行事曆",
-  "short_name": "手帳",
-  "description": "極簡風格的個人行事曆與每日手帳",
+  "name": "偉大的計畫",
+  "short_name": "計畫",
+  "description": "請加油",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
@@ -11,13 +11,13 @@
   "lang": "zh-Hant",
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "IMG_3260.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "icon-512.png",
+      "src": "IMG_3261.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
