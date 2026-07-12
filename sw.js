@@ -3,7 +3,7 @@
 // HTML/CSS/manifest 等靜態外殼快取起來，方便離線或弱網時仍能開啟 App，
 // 但完全不快取任何 Firebase 的請求，確保資料永遠是最新的。
 
-const CACHE_NAME = 'handzhang-shell-v1';
+const CACHE_NAME = 'handzhang-shell-v2';
 const SHELL_FILES = [
   './',
   './index.html',
