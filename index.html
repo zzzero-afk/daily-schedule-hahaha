@@ -689,6 +689,7 @@ async function checkAndCarryOverBubbles() {
     document.getElementById('bubble-banner').style.display = 'none';
     return;
   }
+  
 
   const currentWeekId = getWeekIdentifier(anchorDate);
   // 💡【修改2】調整條件為只要未完成且小於當前週別，就可以觸發連續漂流機制與扣分
@@ -714,7 +715,37 @@ async function checkAndCarryOverBubbles() {
   document.getElementById('bubble-banner').style.display = 'block';
   setTimeout(() => { document.getElementById('bubble-banner').style.display = 'none'; }, 5000);
 }
+// 自動把昨天以前未完成的任務流向今天
+async function autoCarryOverDailyTasks() {
+  if (!currentUser) return;
+  const todayStr = toDateStr(new Date());
 
+  // 搜尋歷史資料
+  Object.keys(daysData).forEach(async (dStr) => {
+    // 只要是今天之前的日期
+    if (dStr < todayStr) {
+      const day = daysData[dStr];
+      if (!day.tasks || day.tasks.length === 0) return;
+
+      let hasMoved = false;
+      const updatedTasks = day.tasks.map(t => {
+        // 如果任務未完成、且還沒延宕過
+        if (!t.done && !t.postponed) {
+          hasMoved = true;
+          // 自動幫今天的清單新增這一筆任務
+          addDistributedTask(todayStr, `[續] ${t.text}`, t.color || 'none', t.note || '', t.parentId);
+          // 將昨天的該筆任務標記為已延宕
+          return { ...t, postponed: true };
+        }
+        return t;
+      });
+
+      if (hasMoved) {
+        await db.collection('users').doc(currentUser.uid).collection('days').doc(dStr).set({ tasks: updatedTasks }, { merge: true });
+      }
+    }
+  });
+}
 /* ============================================================
    💸 記帳運算增刪
    ============================================================ */
@@ -1196,6 +1227,7 @@ function renderCurrentView() {
   if (!currentUser) return;
   updateMonthGoalUI(); updateWeekTitleUI();
   checkAndCarryOverBubbles();
+  autoCarryOverDailyTasks(); // 👈 加上了這一行自動遞延！
   renderPoolUI(); 
   updateGlobalStatsUI();
   if (currentView === 'week') renderWeekKanbanView(); else renderMonthView();
