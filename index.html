@@ -10,11 +10,11 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="P人自有妙計">
-<link class="apple-touch-icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght=500;700&family=Noto+Sans+TC:wght=400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
 
 <style>
   :root{
@@ -245,7 +245,7 @@
 <div id="login-screen" style="display:none;">
   <div class="brand-mark">JOURNAL · PLANNER</div>
   <h1>P人消滅計畫</h1>
-  <h4>procrastination (n.)</h4><p><br>We need decisive action.</p>
+  <h4>procrastination</h4><p><i>noun[U]</i><br>We need decisive action.</p>
   <button class="google-btn" id="google-login-btn">
     <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.9 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.5 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 16 19 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.5 29.6 4 24 4c-7.4 0-13.8 4.2-17 10.7z"/><path fill="#4CAF50" d="M24 44c5.4 0 10.3-2.1 14-5.5l-6.5-5.4C29.4 35 26.8 36 24 36c-5.3 0-9.7-3.1-11.3-7.6l-6.6 5.1C9.9 39.7 16.4 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-1.1 3.1-3.4 5.6-6.3 7.1l6.5 5.4C39.5 37.2 44 31.5 44 24c0-1.3-.1-2.7-.4-3.5z"/></svg>
     使用 Google 帳號登入
@@ -330,7 +330,7 @@
 
     <div class="main-content-view">
       <div class="week-view-container">
-        <div class="bubble-banner" id="bubble-banner">🫧 上週計畫未完成！拖延症發作，化作時間泡泡流過來。</div>
+        <div class="bubble-banner" id="bubble-banner">➡️ 上週有計畫還沒完成，已自動流向本週！</div>
         <div id="week-view" class="week-kanban"></div>
       </div>
 
@@ -465,7 +465,13 @@ function getWeekIdentifier(d) {
 }
 
 function addDays(d, n){ const date = new Date(d); date.setDate(date.getDate() + n); return date; }
-function addMonths(d, n){ const date = new Date(d); date.setMonth(date.getMonth() + n); return date; }
+function addMonths(d, n){
+  // 避免 1/31 + 1 個月 變成 3/3：日期超出該月天數時，夾到該月最後一天
+  const target = new Date(d.getFullYear(), d.getMonth() + n, 1);
+  const lastDay = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate();
+  target.setDate(Math.min(d.getDate(), lastDay));
+  return target;
+}
 function escapeHtml(str) { if (!str) return ''; const div = document.createElement('div'); div.textContent = str; return div.innerHTML; }
 
 /* ============================================================
@@ -570,8 +576,15 @@ function attachFirestoreListeners() {
   
   unsubscribePool = userDocRef.collection('pool').onSnapshot(snapshot => {
     globalPool = []; snapshot.forEach(doc => { globalPool.push({ id: doc.id, ...doc.data() }); });
-    globalPool.sort((a, b) => a.id.localeCompare(b.id));
+    // 依建立時間排序（serverTimestamp 尚未回填時視為最新）
+    globalPool.sort((a, b) => {
+      const ta = a.createdAt && a.createdAt.seconds ? a.createdAt.seconds : Number.MAX_SAFE_INTEGER;
+      const tb = b.createdAt && b.createdAt.seconds ? b.createdAt.seconds : Number.MAX_SAFE_INTEGER;
+      return ta - tb || a.id.localeCompare(b.id);
+    });
+    checkAndCarryOverPlans();
     renderPoolUI();
+    checkAndSyncWeekPlans();
   });
 
   unsubscribeScores = userDocRef.collection('scores').onSnapshot(snapshot => {
@@ -584,6 +597,10 @@ function detachListeners() {
   if (unsubscribeDays) unsubscribeDays(); if (unsubscribeWeeks) unsubscribeWeeks();
   if (unsubscribeMonths) unsubscribeMonths(); if (unsubscribePool) unsubscribePool();
   if (unsubscribeScores) unsubscribeScores();
+  unsubscribeDays = unsubscribeWeeks = unsubscribeMonths = unsubscribePool = unsubscribeScores = null;
+  // 登出後清空本機資料，避免換帳號時看到上一位的內容
+  daysData = {}; weeksMeta = {}; monthsMeta = {}; globalPool = []; scoreLogs = [];
+  selectedDateStr = null;
 }
 
 function getDayData(dateStr) { return daysData[dateStr] || { tasks: [], diary: '', ledger: [] }; }
@@ -594,8 +611,10 @@ function getDayData(dateStr) { return daysData[dateStr] || { tasks: [], diary: '
 async function addDistributedTask(dateStr, text, color, note, parentId) {
   const current = getDayData(dateStr);
   const taskId = Date.now().toString(36) + Math.random().toString(36).slice(2,6);
-  const tasks = [...(current.tasks || []), { id: taskId, text: text, done: false, color: color, note: note, parentId: parentId }];
-  await db.collection('users').doc(currentUser.uid).collection('days').doc(dateStr).set({ tasks }, { merge: true });
+  const newTask = { id: taskId, text: text, done: false, color: color || 'none', note: note || '', parentId: parentId || null };
+  // 用 arrayUnion 避免本機資料尚未同步時覆蓋掉同一天的其他任務
+  await db.collection('users').doc(currentUser.uid).collection('days').doc(dateStr).set(
+    { tasks: firebase.firestore.FieldValue.arrayUnion(newTask) }, { merge: true });
 }
 
 async function toggleTask(dateStr, taskId) {
@@ -627,9 +646,17 @@ async function postponeTaskToTomorrow(dateStr, taskId) {
   });
   if (!taskToMove) return;
 
-  await db.collection('users').doc(currentDateStr).set({ tasks }, { merge: true });
+  await db.collection('users').doc(currentUser.uid).collection('days').doc(dateStr).set({ tasks }, { merge: true });
   const tomorrowStr = toDateStr(addDays(fromDateStr(dateStr), 1));
-  await addDistributedTask(tomorrowStr, `[續] ${taskToMove.text}`, taskToMove.color, taskToMove.note, taskToMove.parentId);
+  const movedText = taskToMove.text.startsWith('[續]') ? taskToMove.text : `[續] ${taskToMove.text}`;
+  await addDistributedTask(tomorrowStr, movedText, taskToMove.color, taskToMove.note, taskToMove.parentId);
+
+  // 週計畫的指派日期也跟著搬到明天，否則原日期的任務永遠不會完成，週計畫無法結案
+  if (taskToMove.parentId) {
+    const poolRef = db.collection('users').doc(currentUser.uid).collection('pool').doc(taskToMove.parentId);
+    await poolRef.update({ assignedDates: firebase.firestore.FieldValue.arrayRemove(dateStr) });
+    await poolRef.update({ assignedDates: firebase.firestore.FieldValue.arrayUnion(tomorrowStr) });
+  }
   
   await logScoreChange(-3, `延宕任務「${taskToMove.text}」至明天`, dateStr);
   alert('已流向明天！分數 －３ 🩸');
@@ -641,8 +668,9 @@ function checkAndSyncWeekPlans() {
     if (!plan.assignedDates || plan.assignedDates.length === 0) return;
     let allDone = true;
     for (const dStr of plan.assignedDates) {
-      const matchTask = (getDayData(dStr).tasks || []).find(t => t.parentId === plan.id);
-      if (!matchTask || !matchTask.done) { allDone = false; break; }
+      // 已延宕(postponed)的任務不列入判斷，以延續到後面的那一筆為準
+      const related = (getDayData(dStr).tasks || []).filter(t => t.parentId === plan.id && !t.postponed);
+      if (related.length === 0 || related.some(t => !t.done)) { allDone = false; break; }
     }
     const nextStatus = allDone ? 'completed' : 'pending';
     if (plan.status !== nextStatus) {
@@ -661,9 +689,16 @@ function enableInlineNoteEdit(element, id, collectionType, dateStr = null, taskI
     const input = document.createElement('input');
     input.type = 'text'; input.className = 'note-edit-input'; input.value = currentNoteText;
     
+    let noteSaved = false;
     const saveNoteUpdate = async () => {
+      if (noteSaved) return;
+      noteSaved = true;
       const newNote = input.value.trim();
-      if (newNote === currentNoteText) { renderCurrentView(); return; }
+      if (newNote === currentNoteText) {
+        renderCurrentView();
+        if (selectedDateStr) renderDayDetail(selectedDateStr);
+        return;
+      }
       if (collectionType === 'pool') {
         await db.collection('users').doc(currentUser.uid).collection('pool').doc(id).update({ note: newNote });
       } else if (collectionType === 'days' && dateStr && taskId) {
@@ -678,74 +713,62 @@ function enableInlineNoteEdit(element, id, collectionType, dateStr = null, taskI
   });
 }
 
-async function checkAndCarryOverBubbles() {
-  if (!currentUser) return;
-  const now = new Date();
-  const currentMon = getMondayOfWeek(anchorDate);
-  const currentSun = addDays(currentMon, 6);
-  currentSun.setHours(23, 59, 59, 999);
+/* ============================================================
+   ➡️ 週計畫未完成 → 自動流向下週（以「今天」所在的週為準，不受瀏覽週影響）
+   ============================================================ */
+const CARRY_OVER_PENALTY = 5;   // 每次流向下週扣分，不想扣分改成 0
+let carryOverRunning = false;   // 防止重複觸發造成重複扣分
 
-  if (now.getTime() < currentSun.getTime()) {
-    document.getElementById('bubble-banner').style.display = 'none';
-    return;
-  }
-  
+async function checkAndCarryOverPlans() {
+  if (!currentUser || carryOverRunning) return;
 
-  const currentWeekId = getWeekIdentifier(anchorDate);
-  // 💡【修改2】調整條件為只要未完成且小於當前週別，就可以觸發連續漂流機制與扣分
-  const overdueTasks = globalPool.filter(item => item.status === 'pending' && item.weekId && item.weekId < currentWeekId);
-  
-  if (overdueTasks.length === 0) { 
-    document.getElementById('bubble-banner').style.display = 'none'; 
-    return; 
-  }
+  const realNow = new Date();
+  const realWeekId = getWeekIdentifier(realNow);
+  const prevSunday = addDays(getMondayOfWeek(realNow), -1);
+  const prevSundayStr = toDateStr(prevSunday);
 
-  const batch = db.batch();
-  const lastSundayStr = toDateStr(currentSun);
+  // 只要不是「已完成」且屬於過去週別的週計畫，都流向本週
+  const overdue = globalPool.filter(item =>
+    item.status !== 'completed' && item.weekId && item.weekId < realWeekId);
+  if (overdue.length === 0) return;
 
-  for (const item of overdueTasks) {
-    batch.update(db.collection('users').doc(currentUser.uid).collection('pool').doc(item.id), { 
-      weekId: currentWeekId, 
-      isBubble: true 
-    });
-    await logScoreChange(-5, `週計畫「${item.text}」未落實，結算觸發漂流`, lastSundayStr);
-  }
-  
-  await batch.commit();
-  document.getElementById('bubble-banner').style.display = 'block';
-  setTimeout(() => { document.getElementById('bubble-banner').style.display = 'none'; }, 5000);
-}
-// 自動把昨天以前未完成的任務流向今天
-async function autoCarryOverDailyTasks() {
-  if (!currentUser) return;
-  const todayStr = toDateStr(new Date());
+  carryOverRunning = true;
+  try {
+    const userRef = db.collection('users').doc(currentUser.uid);
+    const batch = db.batch();
 
-  // 搜尋歷史資料
-  Object.keys(daysData).forEach(async (dStr) => {
-    // 只要是今天之前的日期
-    if (dStr < todayStr) {
-      const day = daysData[dStr];
-      if (!day.tasks || day.tasks.length === 0) return;
-
-      let hasMoved = false;
-      const updatedTasks = day.tasks.map(t => {
-        // 如果任務未完成、且還沒延宕過
-        if (!t.done && !t.postponed) {
-          hasMoved = true;
-          // 自動幫今天的清單新增這一筆任務
-          addDistributedTask(todayStr, `[續] ${t.text}`, t.color || 'none', t.note || '', t.parentId);
-          // 將昨天的該筆任務標記為已延宕
-          return { ...t, postponed: true };
-        }
-        return t;
+    overdue.forEach(item => {
+      batch.update(userRef.collection('pool').doc(item.id), {
+        weekId: realWeekId,
+        assignedDates: [],   // 舊週的日期指派作廢，新週重新分配
+        status: 'pending',
+        isCarried: true,
+        carryCount: firebase.firestore.FieldValue.increment(1),
+        isBubble: firebase.firestore.FieldValue.delete()   // 清掉舊版泡泡標記
       });
-
-      if (hasMoved) {
-        await db.collection('users').doc(currentUser.uid).collection('days').doc(dStr).set({ tasks: updatedTasks }, { merge: true });
+      if (CARRY_OVER_PENALTY > 0) {
+        // 扣分與流向在同一個 batch，確保不會只扣分卻沒搬、或搬了卻重複扣分
+        batch.set(userRef.collection('scores').doc(), {
+          points: -CARRY_OVER_PENALTY,
+          reason: `週計畫「${item.text}」未完成，流向下週`,
+          monthStr: toMonthStr(prevSunday),
+          dateStr: prevSundayStr,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
       }
-    }
-  });
+    });
+
+    await batch.commit();
+    const banner = document.getElementById('bubble-banner');
+    banner.style.display = 'block';
+    setTimeout(() => { banner.style.display = 'none'; }, 5000);
+  } catch (err) {
+    console.error('週計畫流向下週失敗：', err);
+  } finally {
+    carryOverRunning = false;
+  }
 }
+
 /* ============================================================
    💸 記帳運算增刪
    ============================================================ */
@@ -855,7 +878,8 @@ function renderPoolUI() {
 
     const displayNote = item.note ? `✐ ${item.note} ` : `✐ ···`;
     const noteSpanHtml = `<span class="editable-note-span" id="note-pool-${item.id}">${escapeHtml(displayNote)}</span>`;
-    let badgeHtml = item.isBubble ? `<span style="font-size:9px; background:#C75D3D; color:#fff; padding:1px 4px; border-radius:3px; margin-right:4px;">🫧 漂流泡泡 －５</span>` : '';
+    let badgeHtml = (item.isCarried || item.isBubble)
+      ? `<span style="font-size:9px; background:#C75D3D; color:#fff; padding:1px 4px; border-radius:3px; margin-right:4px;">➡️ 上週延續${item.carryCount > 1 ? ' ×' + item.carryCount : ''}</span>` : '';
 
     div.innerHTML = `
       <div style="display:flex; align-items:flex-start; padding-right:20px;">
@@ -877,19 +901,22 @@ function renderPoolUI() {
       const checkedBoxes = div.querySelectorAll('.assign-check:checked');
       const selectedDates = Array.from(checkedBoxes).map(cb => cb.value);
       
+      // 只動有變化的日子：保留已存在任務（不洗掉完成狀態），移除取消勾選的，補上新勾選的
       for(let i=0; i<7; i++) {
         const targetDStr = toDateStr(addDays(monday, i));
-        const dayData = getDayData(targetDStr);
-        if(dayData.tasks) {
-          const cleanTasks = dayData.tasks.filter(t => t.parentId !== item.id);
+        const existing = (getDayData(targetDStr).tasks || []);
+        const mine = existing.filter(t => t.parentId === item.id && !t.postponed);
+        const wanted = selectedDates.includes(targetDStr);
+
+        if (!wanted && existing.some(t => t.parentId === item.id)) {
+          const cleanTasks = existing.filter(t => t.parentId !== item.id);
           await db.collection('users').doc(currentUser.uid).collection('days').doc(targetDStr).set({ tasks: cleanTasks }, { merge: true });
+        } else if (wanted && mine.length === 0) {
+          await addDistributedTask(targetDStr, item.text, item.color || 'none', item.note || '', item.id);
         }
       }
 
       await db.collection('users').doc(currentUser.uid).collection('pool').doc(item.id).update({ assignedDates: selectedDates });
-      for (const chosenDate of selectedDates) {
-        await addDistributedTask(chosenDate, item.text, item.color || 'none', item.note || '', item.id);
-      }
       alert('指派分配成功！');
     });
 
@@ -1226,8 +1253,7 @@ document.getElementById('nav-today').addEventListener('click', () => { anchorDat
 function renderCurrentView() {
   if (!currentUser) return;
   updateMonthGoalUI(); updateWeekTitleUI();
-  checkAndCarryOverBubbles();
-  autoCarryOverDailyTasks(); // 👈 加上了這一行自動遞延！
+  checkAndCarryOverPlans();
   renderPoolUI(); 
   updateGlobalStatsUI();
   if (currentView === 'week') renderWeekKanbanView(); else renderMonthView();
