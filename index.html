@@ -679,11 +679,15 @@ function enableInlineNoteEdit(element, id, collectionType, dateStr = null, taskI
   });
 }
 
-/* 🫧 時間泡泡機制修復：只要過期未完成即自動升級為泡泡並移入當週 */
+/* 🫧 時間泡泡機制修復：無論過多久開啟 App，均以真實世界的當週作為標準判斷未完成泡泡 */
 async function checkAndCarryOverBubbles() {
   if (!currentUser) return;
-  const currentWeekId = getWeekIdentifier(anchorDate);
-  const overdueTasks = globalPool.filter(item => item.status === 'pending' && item.weekId && item.weekId < currentWeekId);
+  
+  // 修正：以真實世界今天的週 Identifier 為基準，而非單純使用 anchorDate
+  const realCurrentWeekId = getWeekIdentifier(new Date());
+  
+  // 尋找只要是 pending 且 weekId 小於真實世界當前週的計畫
+  const overdueTasks = globalPool.filter(item => item.status === 'pending' && item.weekId && item.weekId < realCurrentWeekId);
   
   if (overdueTasks.length === 0) { 
     document.getElementById('bubble-banner').style.display = 'none'; 
@@ -695,7 +699,7 @@ async function checkAndCarryOverBubbles() {
 
   for (const item of overdueTasks) {
     batch.update(db.collection('users').doc(currentUser.uid).collection('pool').doc(item.id), { 
-      weekId: currentWeekId, 
+      weekId: realCurrentWeekId, 
       isBubble: true 
     });
     await logScoreChange(-5, `週計畫「${item.text}」未落實，結算觸發漂流`, todayStr);
