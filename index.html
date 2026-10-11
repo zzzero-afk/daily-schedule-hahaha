@@ -300,7 +300,7 @@
         </div>
       </div>
 
-      <!-- 🍰 當月類別花費圓餅圖區塊 -->
+      <!--  當月類別花費圓餅圖區塊 -->
       <div class="main-content-view">
         <div class="week-view-container">
           <div class="bubble-banner" id="bubble-banner">🫧 上週計畫未完成！拖延症發作，化作時間泡泡流過來。</div>
@@ -309,9 +309,9 @@
       
         <!-- 放到月計畫容器內，預設隱藏 -->
         <div id="month-view" style="display:none;">
-          <!-- 🍰 本月花費比例圓餅圖 -->
+          <!--  本月花費比例圓餅圖 -->
           <div class="panel-card" style="margin-bottom: 20px;">
-            <h3>本月花費比例 🍰</h3>
+            <h3>本月花費比例 </h3>
             <div style="position: relative; height: 260px; width: 100%; display: flex; align-items: center; justify-content: center;">
               <canvas id="monthly-expense-chart"></canvas>
               <div id="no-chart-data" style="display:none; color:var(--muted); font-size:12px; font-style:italic;">這個月還沒有任何記帳唷！</div>
@@ -541,7 +541,7 @@ function updateGlobalStatsUI() {
   updateMonthlyExpenseChart();
 }
 
-/* 🍰 圓餅圖繪製邏輯 */
+/*  圓餅圖繪製邏輯 */
 function updateMonthlyExpenseChart() {
   const currentMonthStr = toMonthStr(anchorDate);
   const categoryTotals = {};
