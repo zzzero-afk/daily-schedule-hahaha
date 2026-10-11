@@ -16,6 +16,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght=500;700&family=Noto+Sans+TC:wght=400;500;700&display=swap" rel="stylesheet">
 
+<!-- 📊 引入 Chart.js 繪製圓餅圖 -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
   :root{
     --bg:#FAF8F5;
@@ -138,7 +141,6 @@
   .pool-item-del { position: absolute; right: 6px; top: 6px; border: none; background: transparent; color: var(--muted); cursor: pointer; font-size: 14px; opacity: 0.5; }
   .pool-item:hover .pool-item-del { opacity: 1; }
 
-  /* 備註可直接編輯樣式 */
   .editable-note-span { display: block; cursor: pointer; font-size: 11.5px; color: var(--muted); background: rgba(43,40,37,0.04); padding: 4px 6px; border-radius: 4px; margin-top: 4px; font-style: italic; border: 1px dashed transparent; }
   .editable-note-span:hover { border-color: var(--muted); background: rgba(43,40,37,0.07); }
   .note-edit-input { width: 100%; font-size: 11.5px; padding: 3px 5px; margin-top: 4px; border: 1px solid var(--accent); border-radius: 4px; outline: none; }
@@ -167,7 +169,6 @@
   .kanban-task-item .text-span { flex: 1; word-break: break-word; line-height: 1.35; }
   .kanban-task-item.done .text-span { text-decoration: line-through; color: var(--done); }
 
-  /* 看板下方記帳與小總計區塊 */
   .kanban-accounting-summary { margin-top: auto; border-top: 1px dashed var(--line); padding-top: 8px; display: flex; flex-direction: column; gap: 4px; font-size: 11px; cursor: pointer; }
   .accounting-badge-list { display: flex; flex-wrap: wrap; gap: 3px; max-height: 38px; overflow: hidden; }
   .accounting-badge { background: #ECEAE6; color: var(--ink); padding: 1px 4px; border-radius: 4px; font-size: 10px; }
@@ -220,12 +221,12 @@
   /* 💸 記帳輸入區塊 */
   .accounting-section { margin-bottom: 20px; background: #FAF9F6; padding: 12px; border-radius: 10px; border: 1px solid var(--line); }
   .accounting-section h4 { font-size: 13.5px; margin: 0 0 10px 0; color: var(--ink); display: flex; justify-content: space-between; }
-  .ledger-row { display: flex; gap: 6px; margin-bottom: 10px; }
+  .ledger-row { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
   .ledger-row select { border: 1px solid var(--line); border-radius: 6px; padding: 6px; font-size: 13px; background: var(--card); outline: none; }
-  .ledger-row input { flex: 1; border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; font-size: 13px; outline: none; }
+  .ledger-row input { border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; font-size: 13px; outline: none; }
   .ledger-row button { border: none; background: var(--ink); color: var(--bg); border-radius: 6px; padding: 0 14px; font-size: 13px; cursor: pointer; }
-  .ledger-list { display: flex; flex-direction: column; gap: 5px; max-height: 150px; overflow-y: auto; }
-  .ledger-item { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 5px 8px; border-radius: 4px; font-size: 12.5px; border: 1px solid var(--line); }
+  .ledger-list { display: flex; flex-direction: column; gap: 5px; max-height: 180px; overflow-y: auto; }
+  .ledger-item { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 6px 8px; border-radius: 4px; font-size: 12.5px; border: 1px solid var(--line); }
   .ledger-item .del-ledg { border: none; background: transparent; color: var(--muted); cursor: pointer; font-size: 14px; }
 
   .diary-section label{ font-size:11.5px; letter-spacing:0.15em; color:var(--muted); font-weight:500; display:block; margin-bottom:6px; }
@@ -299,6 +300,15 @@
         </div>
       </div>
 
+      <!-- 🍰 當月類別花費圓餅圖區塊 -->
+      <div class="panel-card">
+        <h3>當月花費比例 🍰</h3>
+        <div style="position: relative; height: 210px; width: 100%; display: flex; align-items: center; justify-content: center;">
+          <canvas id="monthly-expense-chart"></canvas>
+          <div id="no-chart-data" style="display:none; color:var(--muted); font-size:12px; font-style:italic;">這個月還沒有任何記帳唷！</div>
+        </div>
+      </div>
+
       <div class="panel-card">
         <h3>本月目標</h3>
         <textarea class="month-goal-textarea" id="month-goal-input" placeholder="這個月···"></textarea>
@@ -366,6 +376,7 @@
       <div style="font-size:12px; font-weight:700; margin-bottom:6px; color:var(--muted);"></div>
       <div class="task-list" id="task-list"></div>
       
+      <!-- 💸 記帳輸入區塊（已新增「買了什麼註解欄位」） -->
       <div class="accounting-section">
         <h4><span>💸花錢如流水</span> <span id="detail-day-spend-total" style="color:var(--accent);">共 $0</span></h4>
         <div class="ledger-row">
@@ -381,7 +392,8 @@
             <option value="課業">課業</option>
             <option value="其他">其他</option>
           </select>
-          <input type="number" id="ledger-amount" placeholder="多少？" min="0" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+          <input type="text" id="ledger-note" placeholder="買了什麼？" style="flex:1.5;">
+          <input type="number" id="ledger-amount" placeholder="多少？" min="0" style="width:80px;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
           <button id="add-ledger-btn">記帳</button>
         </div>
         <div class="ledger-list" id="ledger-list"></div>
@@ -430,6 +442,7 @@ let monthsMeta = {};
 let globalPool = [];              
 let scoreLogs = [];               
 let selectedPoolColor = 'none';
+let expenseChart = null;
 
 let unsubscribeDays = null;
 let unsubscribeWeeks = null;
@@ -469,7 +482,7 @@ function addMonths(d, n){ const date = new Date(d); date.setMonth(date.getMonth(
 function escapeHtml(str) { if (!str) return ''; const div = document.createElement('div'); div.textContent = str; return div.innerHTML; }
 
 /* ============================================================
-   分數記錄核心與支出計算
+   分數記錄核心與支出計算 + 圓餅圖繪製
    ============================================================ */
 async function logScoreChange(points, reason, targetDateStr) {
   if (!currentUser) return;
@@ -509,6 +522,71 @@ function updateGlobalStatsUI() {
   });
 
   document.getElementById('expense-summary-display').textContent = `$${weeklyExpenseSum} / $${monthlyExpenseSum}`;
+  
+  // 實時更新月度圓餅圖
+  updateMonthlyExpenseChart();
+}
+
+/* 🍰 圓餅圖繪製邏輯 */
+function updateMonthlyExpenseChart() {
+  const currentMonthStr = toMonthStr(anchorDate);
+  const categoryTotals = {};
+
+  Object.keys(daysData).forEach(dStr => {
+    if (dStr.startsWith(currentMonthStr)) {
+      const dayLedger = daysData[dStr].ledger || [];
+      dayLedger.forEach(item => {
+        const cat = item.category || '其他';
+        const amt = item.amount || 0;
+        categoryTotals[cat] = (categoryTotals[cat] || 0) + amt;
+      });
+    }
+  });
+
+  const labels = Object.keys(categoryTotals);
+  const data = Object.values(categoryTotals);
+  const chartCanvas = document.getElementById('monthly-expense-chart');
+  const noDataEl = document.getElementById('no-chart-data');
+
+  if (!chartCanvas) return;
+
+  if (labels.length === 0) {
+    chartCanvas.style.display = 'none';
+    noDataEl.style.display = 'block';
+    if (expenseChart) { expenseChart.destroy(); expenseChart = null; }
+    return;
+  }
+
+  chartCanvas.style.display = 'block';
+  noDataEl.style.display = 'none';
+
+  if (expenseChart) { expenseChart.destroy(); }
+
+  expenseChart = new Chart(chartCanvas, {
+    type: 'pie',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: data,
+        backgroundColor: [
+          '#B87D73', '#8A9A86', '#7E8F9F', '#C2A675', 
+          '#9E8EAD', '#9FA09E', '#C75D3D', '#EADDD6', '#44403C'
+        ],
+        borderWidth: 1,
+        borderColor: '#ffffff'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { font: { family: 'Noto Sans TC', size: 10 }, boxWidth: 12 }
+        }
+      }
+    }
+  });
 }
 
 /* ============================================================
@@ -555,6 +633,7 @@ function attachFirestoreListeners() {
     checkAndSyncWeekPlans();
     autoCarryOverDailyTasks();
     renderCurrentView();
+    updateGlobalStatsUI();
     if (selectedDateStr) renderDayDetail(selectedDateStr);
   });
 
@@ -652,9 +731,6 @@ function checkAndSyncWeekPlans() {
   });
 }
 
-/* ============================================================
-   ✐ 備註編輯
-   ============================================================ */
 function enableInlineNoteEdit(element, id, collectionType, dateStr = null, taskId = null) {
   element.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -679,14 +755,9 @@ function enableInlineNoteEdit(element, id, collectionType, dateStr = null, taskI
   });
 }
 
-/* 🫧 時間泡泡機制修復：無論過多久開啟 App，均以真實世界的當週作為標準判斷未完成泡泡 */
 async function checkAndCarryOverBubbles() {
   if (!currentUser) return;
-  
-  // 修正：以真實世界今天的週 Identifier 為基準，而非單純使用 anchorDate
   const realCurrentWeekId = getWeekIdentifier(new Date());
-  
-  // 尋找只要是 pending 且 weekId 小於真實世界當前週的計畫
   const overdueTasks = globalPool.filter(item => item.status === 'pending' && item.weekId && item.weekId < realCurrentWeekId);
   
   if (overdueTasks.length === 0) { 
@@ -710,7 +781,6 @@ async function checkAndCarryOverBubbles() {
   setTimeout(() => { document.getElementById('bubble-banner').style.display = 'none'; }, 6000);
 }
 
-// 自動把昨天以前未完成的任務流向今天
 async function autoCarryOverDailyTasks() {
   if (!currentUser) return;
   const todayStr = toDateStr(new Date());
@@ -814,25 +884,34 @@ document.getElementById('nav-today').addEventListener('click', () => {
 });
 
 /* ============================================================
-   💸 記帳運算增刪
+   💸 記帳運算增刪 (帶註解)
    ============================================================ */
 async function addLedgerItem() {
   if (!selectedDateStr) return;
   const catSelect = document.getElementById('ledger-category');
+  const noteInput = document.getElementById('ledger-note');
   const amtInput = document.getElementById('ledger-amount');
+  
   const category = catSelect.value;
+  const note = noteInput.value.trim();
   const amount = parseInt(amtInput.value, 10);
 
   if (isNaN(amount) || amount <= 0) { alert('請輸入正確的金額！'); return; }
 
   const current = getDayData(selectedDateStr);
   const currentLedger = current.ledger || [];
-  const newItem = { id: 'ledg_' + Date.now().toString(36), category, amount };
+  const newItem = { 
+    id: 'ledg_' + Date.now().toString(36), 
+    category: category, 
+    note: note, 
+    amount: amount 
+  };
 
   await db.collection('users').doc(currentUser.uid).collection('days').doc(selectedDateStr).set({
     ledger: [...currentLedger, newItem]
   }, { merge: true });
 
+  noteInput.value = '';
   amtInput.value = '';
 }
 
@@ -1085,8 +1164,11 @@ function renderWeekKanbanView() {
     accountingSummaryDiv.addEventListener('click', () => openDayDetail(dateStr));
     
     let dayTotalSpend = ledger.reduce((sum, item) => sum + (item.amount || 0), 0);
-    let badgesHtml = ledger.slice(0, 4).map(l => `<span class="accounting-badge">${l.category}:${l.amount}</span>`).join('');
-    if(ledger.length > 4) badgesHtml += `<span class="accounting-badge">...</span>`;
+    let badgesHtml = ledger.slice(0, 3).map(l => {
+      const labelText = l.note ? `${l.category}(${l.note})` : l.category;
+      return `<span class="accounting-badge">${escapeHtml(labelText)}:$${l.amount}</span>`;
+    }).join('');
+    if(ledger.length > 3) badgesHtml += `<span class="accounting-badge">...</span>`;
 
     accountingSummaryDiv.innerHTML = `
       <div class="accounting-badge-list">${badgesHtml || '<span style="color:var(--muted); font-style:italic; font-size:10px;">荷包守衛</span>'}</div>
@@ -1100,9 +1182,6 @@ function renderWeekKanbanView() {
   }
 }
 
-/* ============================================================
-   月檢視渲染函數
-   ============================================================ */
 function renderMonthView() {
   const dowRow = document.getElementById('month-dow-row');
   const grid = document.getElementById('month-grid');
@@ -1194,16 +1273,13 @@ function renderMonthView() {
       ${spendHtml}
     `;
 
-    dayDiv.addEventListener('click', () => {
-      openDayDetail(dateStr);
-    });
-
+    dayDiv.addEventListener('click', () => { openDayDetail(dateStr); });
     grid.appendChild(dayDiv);
   }
 }
 
 /* ============================================================
-   日詳情內嵌渲染
+   日詳情內嵌渲染 (包含記帳註解與刪除)
    ============================================================ */
 function openDayDetail(dateStr) { selectedDateStr = dateStr; renderDayDetail(dateStr); document.getElementById('day-detail').style.display = 'block'; document.getElementById('day-detail').scrollIntoView({ behavior:'smooth', block:'nearest' }); }
 document.getElementById('close-detail-btn').addEventListener('click', () => { document.getElementById('day-detail').style.display = 'none'; selectedDateStr = null; });
@@ -1290,7 +1366,7 @@ function renderDayDetail(dateStr) {
     });
   }
 
-  // 渲染當日記帳
+  // 渲染當日記帳（包含註解）
   const ledgerListEl = document.getElementById('ledger-list');
   ledgerListEl.innerHTML = '';
   const ledger = data.ledger || [];
@@ -1300,14 +1376,15 @@ function renderDayDetail(dateStr) {
     dayTotalSpend += item.amount || 0;
     const lDiv = document.createElement('div');
     lDiv.className = 'ledger-item';
-    lDiv.innerHTML = `<span>${escapeHtml(item.category)}: $${item.amount}</span><button class="del-ledg">×</button>`;
+    const noteText = item.note ? ` (${escapeHtml(item.note)})` : '';
+    lDiv.innerHTML = `<span><strong>${escapeHtml(item.category)}</strong>${noteText}: <span style="color:var(--accent); font-weight:500;">$${item.amount}</span></span><button class="del-ledg">×</button>`;
     lDiv.querySelector('.del-ledg').addEventListener('click', () => deleteLedgerItem(item.id));
     ledgerListEl.appendChild(lDiv);
   });
 
   document.getElementById('detail-day-spend-total').textContent = `共 $${dayTotalSpend}`;
 
-  // 綁定記帳按鈕
+  // 綁定記帳按鈕與 Enter 鍵觸發
   document.getElementById('add-ledger-btn').onclick = addLedgerItem;
 
   // 綁定當日日記（流水帳）
