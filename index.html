@@ -527,7 +527,7 @@ function updateGlobalStatsUI() {
   updateMonthlyExpenseChart();
 }
 
-/* 💲 圓餅圖繪製邏輯 */
+/* 🍰 圓餅圖繪製邏輯 */
 function updateMonthlyExpenseChart() {
   const currentMonthStr = toMonthStr(anchorDate);
   const categoryTotals = {};
@@ -631,7 +631,6 @@ function attachFirestoreListeners() {
       else daysData[dateStr] = change.doc.data();
     });
     checkAndSyncWeekPlans();
-    autoCarryOverDailyTasks();
     renderCurrentView();
     updateGlobalStatsUI();
     if (selectedDateStr) renderDayDetail(selectedDateStr);
@@ -740,7 +739,11 @@ function enableInlineNoteEdit(element, id, collectionType, dateStr = null, taskI
     
     const saveNoteUpdate = async () => {
       const newNote = input.value.trim();
-      if (newNote === currentNoteText) { renderCurrentView(); return; }
+      if (newNote === currentNoteText) {
+        renderCurrentView(); renderPoolUI();
+        if (selectedDateStr) renderDayDetail(selectedDateStr);
+        return;
+      }
       if (collectionType === 'pool') {
         await db.collection('users').doc(currentUser.uid).collection('pool').doc(id).update({ note: newNote });
       } else if (collectionType === 'days' && dateStr && taskId) {
@@ -781,31 +784,7 @@ async function checkAndCarryOverBubbles() {
   setTimeout(() => { document.getElementById('bubble-banner').style.display = 'none'; }, 6000);
 }
 
-async function autoCarryOverDailyTasks() {
-  if (!currentUser) return;
-  const todayStr = toDateStr(new Date());
-
-  Object.keys(daysData).forEach(async (dStr) => {
-    if (dStr < todayStr) {
-      const day = daysData[dStr];
-      if (!day.tasks || day.tasks.length === 0) return;
-
-      let hasMoved = false;
-      const updatedTasks = day.tasks.map(t => {
-        if (!t.done && !t.postponed) {
-          hasMoved = true;
-          addDistributedTask(todayStr, `[續] ${t.text}`, t.color || 'none', t.note || '', t.parentId);
-          return { ...t, postponed: true };
-        }
-        return t;
-      });
-
-      if (hasMoved) {
-        await db.collection('users').doc(currentUser.uid).collection('days').doc(dStr).set({ tasks: updatedTasks }, { merge: true });
-      }
-    }
-  });
-}
+/* （已移除）未完成日任務自動飄到隔天的功能；現在只保留「流向明天」手動按鈕 */
 
 /* ============================================================
    週計畫注入按鈕與切換監聽
@@ -1341,9 +1320,22 @@ function renderDayDetail(dateStr) {
       checkBtn.className = 'task-checkbox' + (t.done ? ' checked' : '');
       checkBtn.addEventListener('click', () => toggleTask(dateStr, t.id));
 
+      const textWrap = document.createElement('div');
+      textWrap.style.flex = '1';
+      textWrap.style.minWidth = '0';
+
       const textSpan = document.createElement('span');
       textSpan.className = 'task-text' + (t.done ? ' done' : '') + (t.postponed ? ' postponed' : '');
       textSpan.textContent = t.text;
+      textWrap.appendChild(textSpan);
+
+      // 日計畫備註（點擊即可新增／編輯）
+      const noteSpan = document.createElement('span');
+      noteSpan.className = 'editable-note-span';
+      noteSpan.textContent = t.note ? `✐ ${t.note}` : '✐ ···';
+      noteSpan.dataset.rawNote = t.note || '';
+      enableInlineNoteEdit(noteSpan, null, 'days', dateStr, t.id);
+      textWrap.appendChild(noteSpan);
 
       const delBtn = document.createElement('button');
       delBtn.className = 'task-del';
@@ -1351,7 +1343,7 @@ function renderDayDetail(dateStr) {
       delBtn.addEventListener('click', () => deleteTask(dateStr, t.id));
 
       item.appendChild(checkBtn);
-      item.appendChild(textSpan);
+      item.appendChild(textWrap);
 
       if (!t.done && !t.postponed) {
         const postponeBtn = document.createElement('button');
